@@ -3,6 +3,9 @@ package me.kycho.playchat.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.persistence.EntityManager;
 import me.kycho.playchat.domain.Member;
 import org.junit.jupiter.api.DisplayName;
@@ -88,6 +91,36 @@ class MemberRepositoryTest {
         }, "email 값은 중복을 허용하지 않습니다.");
     }
 
+    @Test
+    @DisplayName("email로 Member 조회")
+    void findByEmailTest() throws NotFoundException {
+        // given
+        List<Member> members = createMembers(1);
+        memberRepository.saveAll(members);
+
+        String email = "member@email.com";
+        String password = "password";
+        String name = "member";
+        String imageUrl = "image_url";
+        Member newMember = createMember(email, password, name, imageUrl);
+        memberRepository.save(newMember);
+
+        em.flush();
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findByEmail(email)
+            .orElseThrow(NotFoundException::new);
+
+        // then
+        assertThat(findMember.getId()).isGreaterThan(0);
+        assertThat(findMember.getEmail()).isEqualTo(email);
+        assertThat(findMember.getPassword()).isEqualTo(password);
+        assertThat(findMember.getName()).isEqualTo(name);
+        assertThat(findMember.getImageUrl()).isEqualTo(imageUrl);
+    }
+
+
     private Member createMember(String email, String password, String name, String imageUrl) {
         return Member.builder()
             .email(email)
@@ -95,5 +128,16 @@ class MemberRepositoryTest {
             .name(name)
             .imageUrl(imageUrl)
             .build();
+    }
+
+    private List<Member> createMembers(int memberNum) {
+        return IntStream.rangeClosed(1, memberNum).mapToObj((idx) -> {
+            System.out.println("idx = " + idx);
+            String email = "member" + idx + "@email.com";
+            String password = "pass";
+            String name = "member" + idx;
+            String imageUrl = "image_url" + idx;
+            return createMember(email, password, name, imageUrl);
+        }).collect(Collectors.toList());
     }
 }
