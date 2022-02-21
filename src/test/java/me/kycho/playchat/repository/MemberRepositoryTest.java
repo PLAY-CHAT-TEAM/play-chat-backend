@@ -45,11 +45,7 @@ class MemberRepositoryTest {
             .orElseThrow(NotFoundException::new);
 
         // then
-        assertThat(findMember.getId()).isGreaterThan(0);
-        assertThat(findMember.getEmail()).isEqualTo(email);
-        assertThat(findMember.getPassword()).isEqualTo(password);
-        assertThat(findMember.getName()).isEqualTo(name);
-        assertThat(findMember.getImageUrl()).isEqualTo(imageUrl);
+        assertThat(findMember).usingRecursiveComparison().isEqualTo(savedMember);
     }
 
     @DisplayName("member 저장시 누락된 정보 있을 경우 에러 발생")
@@ -103,7 +99,7 @@ class MemberRepositoryTest {
         String name = "member";
         String imageUrl = "image_url";
         Member newMember = createMember(email, password, name, imageUrl);
-        memberRepository.save(newMember);
+        Member savedMember = memberRepository.save(newMember);
 
         em.flush();
         em.clear();
@@ -113,11 +109,7 @@ class MemberRepositoryTest {
             .orElseThrow(NotFoundException::new);
 
         // then
-        assertThat(findMember.getId()).isGreaterThan(0);
-        assertThat(findMember.getEmail()).isEqualTo(email);
-        assertThat(findMember.getPassword()).isEqualTo(password);
-        assertThat(findMember.getName()).isEqualTo(name);
-        assertThat(findMember.getImageUrl()).isEqualTo(imageUrl);
+        assertThat(findMember).usingRecursiveComparison().isEqualTo(savedMember);
     }
 
 
