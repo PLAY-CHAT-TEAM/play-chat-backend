@@ -47,7 +47,7 @@ class MemberControllerTest {
         given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
 
         mockMvc.perform(
-                multipart("/api/members")
+                multipart("/api/members/join")
                     .file(profileImage)
                     .param("email", email)
                     .param("name", name)

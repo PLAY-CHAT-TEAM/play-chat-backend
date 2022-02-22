@@ -23,7 +23,7 @@ public class MemberController {
     private final MemberService memberService;
     private final FileStore fileStore;
 
-    @PostMapping
+    @PostMapping("/join")
     public ResponseEntity<JoinResponseDto> join(@ModelAttribute JoinRequestDto joinRequestDto)
         throws IOException {
         // TODO : 예외 처리
