@@ -6,12 +6,12 @@ import me.kycho.playchat.domain.Member;
 
 @Getter
 @AllArgsConstructor
-public class JoinResultDto {
+public class JoinResponseDto {
 
     private String email;
     private String name;
 
-    public static JoinResultDto from(Member member) {
-        return new JoinResultDto(member.getEmail(), member.getName());
+    public static JoinResponseDto from(Member member) {
+        return new JoinResponseDto(member.getEmail(), member.getName());
     }
 }
