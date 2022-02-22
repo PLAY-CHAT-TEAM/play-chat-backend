@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MemberDto {
+public class JoinRequestDto {
 
     private String email;
     private String password;
@@ -20,7 +20,7 @@ public class MemberDto {
     private MultipartFile profileImage;
     private String profileImageFileName;
 
-    public Member toEntity() {
+    public Member toMemberEntity() {
         return Member.builder()
             .email(email)
             .password(password)

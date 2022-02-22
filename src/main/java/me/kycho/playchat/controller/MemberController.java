@@ -3,8 +3,8 @@ package me.kycho.playchat.controller;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.common.FileStore;
-import me.kycho.playchat.controller.dto.JoinResultDto;
-import me.kycho.playchat.controller.dto.MemberDto;
+import me.kycho.playchat.controller.dto.JoinResponseDto;
+import me.kycho.playchat.controller.dto.JoinRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.service.MemberService;
 import org.springframework.http.HttpStatus;
@@ -23,17 +23,17 @@ public class MemberController {
     private final MemberService memberService;
     private final FileStore fileStore;
 
-    @PostMapping()
-    public ResponseEntity<JoinResultDto> join(@ModelAttribute MemberDto memberDto)
+    @PostMapping
+    public ResponseEntity<JoinResponseDto> join(@ModelAttribute JoinRequestDto joinRequestDto)
         throws IOException {
         // TODO : 예외 처리
 
-        MultipartFile profileImage = memberDto.getProfileImage();
+        MultipartFile profileImage = joinRequestDto.getProfileImage();
         String storedFileName = fileStore.storeFile(profileImage);
-        memberDto.setProfileImageFileName(storedFileName);
+        joinRequestDto.setProfileImageFileName(storedFileName);
 
-        Member joinedMember = memberService.join(memberDto.toEntity());
-        JoinResultDto result = JoinResultDto.from(joinedMember);
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        Member joinedMember = memberService.join(joinRequestDto.toMemberEntity());
+        JoinResponseDto response = JoinResponseDto.from(joinedMember);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
