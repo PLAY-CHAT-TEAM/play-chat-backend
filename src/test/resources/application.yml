@@ -18,3 +18,9 @@ logging.level:
   #org.hibernate.type: trace
 
 file.dir: /Users/kycho/Desktop/upload/
+
+jwt:
+  header: Authorization
+  #echo 'secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecret'|base64
+  secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg==
+  token-validity-in-seconds: 86400
