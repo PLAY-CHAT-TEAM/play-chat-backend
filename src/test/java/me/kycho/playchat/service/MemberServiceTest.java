@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.Optional;
 import me.kycho.playchat.domain.Member;
+import me.kycho.playchat.exception.DuplicatedEmailException;
 import me.kycho.playchat.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ class MemberServiceTest {
         given(memberRepository.findByEmail(member.getEmail())).willReturn(Optional.of(savedMember));
 
         // when & then
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(DuplicatedEmailException.class, () -> {
             memberService.join(member);
         }, "기존에 가입된 email로 가입할 수 없습니다.");
     }

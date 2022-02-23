@@ -1,5 +1,8 @@
 package me.kycho.playchat.controller.dto;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,10 +17,19 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 public class JoinRequestDto {
 
+    @Email
+    @NotBlank
     private String email;
+
+    @NotBlank
     private String password;
+
+    @NotBlank
     private String name;
+
+    @NotNull  // TODO : 좀더 확인해봐야함
     private MultipartFile profileImage;
+
     private String profileImageFileName;
 
     public Member toMemberEntity() {
