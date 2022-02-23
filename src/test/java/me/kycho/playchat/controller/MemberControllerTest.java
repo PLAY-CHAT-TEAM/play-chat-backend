@@ -53,6 +53,7 @@ class MemberControllerTest {
             "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
             new FileInputStream("./src/test/resources/static/imageForTest.png")
         );
+
         given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
 
         // when & then
