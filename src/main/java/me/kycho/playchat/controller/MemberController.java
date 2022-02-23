@@ -1,6 +1,7 @@
 package me.kycho.playchat.controller;
 
 import java.io.IOException;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.controller.dto.JoinResponseDto;
@@ -24,7 +25,7 @@ public class MemberController {
     private final FileStore fileStore;
 
     @PostMapping("/join")
-    public ResponseEntity<JoinResponseDto> join(@ModelAttribute JoinRequestDto joinRequestDto)
+    public ResponseEntity<JoinResponseDto> join(@Valid @ModelAttribute JoinRequestDto joinRequestDto)
         throws IOException {
         // TODO : 예외 처리
 
