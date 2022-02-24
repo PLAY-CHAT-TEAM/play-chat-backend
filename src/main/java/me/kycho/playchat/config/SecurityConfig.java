@@ -1,6 +1,7 @@
 package me.kycho.playchat.config;
 
 import lombok.RequiredArgsConstructor;
+import me.kycho.playchat.security.CustomAuthenticationEntryPoint;
 import me.kycho.playchat.security.jwt.JwtAuthenticationFilter;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
             .csrf().disable()
+            .exceptionHandling()
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+            .and()
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
