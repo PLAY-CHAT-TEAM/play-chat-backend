@@ -1,4 +1,4 @@
-package me.kycho.playchat.jwt;
+package me.kycho.playchat.security.jwt;
 
 import java.io.IOException;
 import javax.servlet.FilterChain;

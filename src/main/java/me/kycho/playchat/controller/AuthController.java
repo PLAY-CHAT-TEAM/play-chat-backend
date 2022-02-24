@@ -4,7 +4,7 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.controller.dto.SignInRequestDto;
 import me.kycho.playchat.controller.dto.TokenDto;
-import me.kycho.playchat.jwt.JwtTokenProvider;
+import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
