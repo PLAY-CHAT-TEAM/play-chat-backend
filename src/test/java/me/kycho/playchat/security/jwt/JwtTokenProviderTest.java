@@ -1,4 +1,4 @@
-package me.kycho.playchat.jwt;
+package me.kycho.playchat.security.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
