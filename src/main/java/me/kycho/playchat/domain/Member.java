@@ -36,4 +36,8 @@ public class Member {
     private String imageUrl;
 
     // TODO : 생성일, 수정일, 삭제일
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
 }
