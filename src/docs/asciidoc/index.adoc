@@ -20,7 +20,7 @@ kycho;
 
 [[resources_members_join_request]]
 ==== Request
-===== request http messages
+===== Request HTTP Messages
 include::{snippets}/member-join/http-request.adoc[]
 
 ===== Request Header
@@ -32,14 +32,47 @@ include::{snippets}/member-join/request-parts.adoc[]
 
 [[resources_members_join_response]]
 ==== Response
-===== Response body
+===== Response Body
 include::{snippets}/member-join/response-body.adoc[]
-===== Response field
+===== Response Field
 include::{snippets}/member-join/response-fields.adoc[]
 
 [[resources_members_join_sample]]
 ==== Sample
-===== reqeust
+===== Reqeust
 include::{snippets}/member-join/curl-request.adoc[]
-===== response
+===== Response
 include::{snippets}/member-join/http-response.adoc[]
+
+
+
+
+[[resources_members_login]]
+=== Member Login
+
+인증(토큰 발급)에 사용될 api
+
+[[resources_members_login_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-login/http-request.adoc[]
+
+===== Request Header
+include::{snippets}/member-login/request-headers.adoc[]
+
+===== Request Field
+include::{snippets}/member-login/request-fields.adoc[]
+
+[[resources_members_login_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-login/response-body.adoc[]
+===== Response Field
+include::{snippets}/member-login/response-fields.adoc[]
+
+[[resources_members_login_sample]]
+==== Sample
+===== Reqeust
+include::{snippets}/member-login/curl-request.adoc[]
+===== Response
+include::{snippets}/member-login/http-response.adoc[]
