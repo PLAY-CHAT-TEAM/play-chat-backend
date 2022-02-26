@@ -1,13 +1,11 @@
-= RESTful Notes API Guide
-Andy Wilkinson;
+= PLAY-CHAT API Guide
+kycho;
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
 :toc: left
 :toclevels: 4
 :sectlinks:
-:operation-curl-request-title: Example request
-:operation-http-response-title: Example response
 
 [[overview]]
 = Overview
@@ -73,35 +71,50 @@ For example, a request that attempts to apply a non-existent tag to a note will 
 
 include::{snippets}/error-example/http-response.adoc[]
 
-[[overview_hypermedia]]
-== Hypermedia
 
-RESTful Notes uses hypermedia and resources include links to other resources in their
-responses. Responses are in https://github.com/mikekelly/hal_specification[Hypertext
-Application Language (HAL)] format. Links can be found beneath the `_links` key. Users of
-the API should not create URIs themselves, instead they should use the above-described
-links to navigate from resource to resource.
 
 [[resources]]
 = Resources
 
+[[resources_members]]
+== Members
+회원과 관련된 리소스
+
+[[resources_members_join]]
+=== Member Join
+회원가입에 사용될 api
+
+[[resources_members_join_request]]
+==== Request
+===== request http
+include::{snippets}/member-join/http-request.adoc[]
+
+===== Request Header
+include::{snippets}/member-join/request-headers.adoc[]
+
+===== Request Parameter
+include::{snippets}/member-join/request-parameters.adoc[]
+include::{snippets}/member-join/request-parts.adoc[]
+
+[[resources_members_join_response]]
+==== Response
+===== Response body
+include::{snippets}/member-join/response-body.adoc[]
+===== Response field
+include::{snippets}/member-join/response-fields.adoc[]
 
 
-[[resources_index]]
-== Index
-
-The index provides the entry point into the service.
-
-
-
-[[resources_index_access]]
-=== Accessing the index
-
-A `GET` request is used to access the index
-
-operation::index-example[snippets='response-fields,http-response,links']
+[[resources_members_join_sample]]
+==== Sample
+===== reqeust
+include::{snippets}/member-join/curl-request.adoc[]
+===== response
+include::{snippets}/member-join/http-response.adoc[]
 
 
+
+
+== ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[resources_notes]]
 == Notes
@@ -194,35 +207,3 @@ include::{snippets}/note-update-example/curl-request.adoc[]
 ==== Example response
 
 include::{snippets}/note-update-example/http-response.adoc[]
-
-
-
-[[resources_tag]]
-== Tag
-
-The Tag resource is used to retrieve, update, and delete individual tags
-
-
-
-[[resources_tag_links]]
-=== Links
-
-include::{snippets}/tag-get-example/links.adoc[]
-
-
-
-[[resources_tag_retrieve]]
-=== Retrieve a tag
-
-A `GET` request will retrieve the details of a tag
-
-operation::tag-get-example[snippets='response-fields,curl-request,http-response']
-
-
-
-[[resources_tag_update]]
-=== Update a tag
-
-A `PATCH` request is used to update a tag
-
-operation::tag-update-example[snippets='request-fields,curl-request,http-response']
