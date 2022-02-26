@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
@@ -31,6 +33,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.restdocs.operation.OperationRequest;
+import org.springframework.restdocs.operation.OperationRequestFactory;
+import org.springframework.restdocs.operation.OperationRequestPart;
+import org.springframework.restdocs.operation.OperationRequestPartFactory;
+import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
+import org.springframework.restdocs.operation.preprocess.Preprocessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +60,23 @@ class MemberControllerTest {
 
     @MockBean
     FileStore fileStore;
+
+    static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
+
+        private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();
+        private final OperationRequestFactory requestFactory = new OperationRequestFactory();
+
+        @Override
+        public OperationRequest preprocess(OperationRequest request) {
+            List<OperationRequestPart> parts = new ArrayList<>();
+            for (OperationRequestPart part : request.getParts()) {
+                parts.add(partFactory.create(part.getName(), part.getSubmittedFileName(),
+                    "<< binary data >>" .getBytes(), part.getHeaders()));
+            }
+            return requestFactory.create(request.getUri(), request.getMethod(),
+                request.getContent(), request.getHeaders(), request.getParameters(), parts);
+        }
+    }
 
     @Test
     @DisplayName("회원가입 테스트 정상")
@@ -84,6 +109,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("name").value(name))
             .andDo(
                 document("member-join",
+                    Preprocessors.preprocessRequest(new PartContentModifyingPreprocessor()),
                     requestHeaders(
                         headerWithName(HttpHeaders.CONTENT_TYPE)
                             .description("요청 메시지의 콘텐츠 타입 +" + "\n" + MediaType.MULTIPART_FORM_DATA),

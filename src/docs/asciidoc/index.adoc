@@ -86,7 +86,7 @@ include::{snippets}/error-example/http-response.adoc[]
 
 [[resources_members_join_request]]
 ==== Request
-===== request http
+===== request http messages
 include::{snippets}/member-join/http-request.adoc[]
 
 ===== Request Header
