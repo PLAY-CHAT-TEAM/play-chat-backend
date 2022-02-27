@@ -4,6 +4,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
@@ -61,23 +62,6 @@ class MemberControllerTest {
     @MockBean
     FileStore fileStore;
 
-    static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
-
-        private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();
-        private final OperationRequestFactory requestFactory = new OperationRequestFactory();
-
-        @Override
-        public OperationRequest preprocess(OperationRequest request) {
-            List<OperationRequestPart> parts = new ArrayList<>();
-            for (OperationRequestPart part : request.getParts()) {
-                parts.add(partFactory.create(part.getName(), part.getSubmittedFileName(),
-                    "<< binary data >>" .getBytes(), part.getHeaders()));
-            }
-            return requestFactory.create(request.getUri(), request.getMethod(),
-                request.getContent(), request.getHeaders(), request.getParameters(), parts);
-        }
-    }
-
     @Test
     @DisplayName("회원가입 테스트 정상")
     void joinTest() throws Exception {
@@ -109,7 +93,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("name").value(name))
             .andDo(
                 document("member-join",
-                    Preprocessors.preprocessRequest(new PartContentModifyingPreprocessor()),
+                    preprocessRequest(new PartContentModifyingPreprocessor()),
                     requestHeaders(
                         headerWithName(HttpHeaders.CONTENT_TYPE)
                             .description("요청 메시지의 콘텐츠 타입 +" + "\n" + MediaType.MULTIPART_FORM_DATA),
@@ -166,5 +150,22 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.CONFLICT.value()))
             .andExpect(jsonPath("message").value("Duplicated Email."))
         ;
+    }
+
+    static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
+
+        private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();
+        private final OperationRequestFactory requestFactory = new OperationRequestFactory();
+
+        @Override
+        public OperationRequest preprocess(OperationRequest request) {
+            List<OperationRequestPart> parts = new ArrayList<>();
+            for (OperationRequestPart part : request.getParts()) {
+                parts.add(partFactory.create(part.getName(), part.getSubmittedFileName(),
+                    "<< binary data >>".getBytes(), part.getHeaders()));
+            }
+            return requestFactory.create(request.getUri(), request.getMethod(),
+                request.getContent(), request.getHeaders(), request.getParameters(), parts);
+        }
     }
 }

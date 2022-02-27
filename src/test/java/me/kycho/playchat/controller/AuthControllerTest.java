@@ -3,6 +3,7 @@ package me.kycho.playchat.controller;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -12,9 +13,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import me.kycho.playchat.controller.dto.SignInRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.operation.preprocess.ContentModifier;
+import org.springframework.restdocs.operation.preprocess.ContentModifyingOperationPreprocessor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +81,9 @@ class AuthControllerTest {
             .andExpect(jsonPath("token").exists())
             .andDo(
                 document("member-login",
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor(JWTContentModifier())
+                    ),
                     requestHeaders(
                         headerWithName(HttpHeaders.CONTENT_TYPE)
                             .description("요청 메시지의 콘텐츠 타입 +" + "\n" + MediaType.APPLICATION_JSON),
@@ -90,5 +99,20 @@ class AuthControllerTest {
                     )
                 )
             );
+    }
+
+    private ContentModifier JWTContentModifier() {
+        return (originalContent, contentType) -> {
+            String ogContent = new String(originalContent);
+            try {
+                JSONObject jsonObject = new JSONObject(ogContent);
+                jsonObject.put("token", "XXXXXXX.YYYYYYYYYY.ZZZZZZ");
+                String content = jsonObject.toString();
+                return content.getBytes(StandardCharsets.UTF_8);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return "<<< ERROR >>>".getBytes(StandardCharsets.UTF_8);
+        };
     }
 }
