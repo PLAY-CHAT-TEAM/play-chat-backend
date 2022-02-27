@@ -5,6 +5,8 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.headerWit
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
@@ -93,7 +95,12 @@ class MemberControllerTest {
             .andExpect(jsonPath("name").value(name))
             .andDo(
                 document("member-join",
-                    preprocessRequest(new PartContentModifyingPreprocessor()),
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor()
+                    ),
+                    preprocessResponse(
+                        prettyPrint()
+                    ),
                     requestHeaders(
                         headerWithName(HttpHeaders.CONTENT_TYPE)
                             .description("요청 메시지의 콘텐츠 타입 +" + "\n" + MediaType.MULTIPART_FORM_DATA),

@@ -3,7 +3,9 @@ package me.kycho.playchat.controller;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -81,8 +83,12 @@ class AuthControllerTest {
             .andExpect(jsonPath("token").exists())
             .andDo(
                 document("member-login",
+                    preprocessRequest(
+                        prettyPrint()
+                    ),
                     preprocessResponse(
-                        new ContentModifyingOperationPreprocessor(JWTContentModifier())
+                        new ContentModifyingOperationPreprocessor(JWTContentModifier()),
+                        prettyPrint()
                     ),
                     requestHeaders(
                         headerWithName(HttpHeaders.CONTENT_TYPE)
@@ -91,8 +97,8 @@ class AuthControllerTest {
                             .description("응답받을 콘텐츠 타입 +" + "\n" + MediaType.APPLICATION_JSON)
                     ),
                     requestFields(
-                        fieldWithPath("email").description("인증을 위한 이메일"),
-                        fieldWithPath("password").description("인증을 위한 비밀번호")
+                        fieldWithPath("email").description("인증을 위한 이메일 (필수)"),
+                        fieldWithPath("password").description("인증을 위한 비밀번호 (필수)")
                     ),
                     responseFields(
                         fieldWithPath("token").description("인증이 필요한 리소스 요청에 사용가능한 JWT 토큰")
