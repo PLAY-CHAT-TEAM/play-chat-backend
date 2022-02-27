@@ -23,4 +23,4 @@ jwt:
   header: Authorization
   #echo 'secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecret'|base64
   secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg==
-  token-validity-in-seconds: 86400
+  token-validity-in-seconds: 5
