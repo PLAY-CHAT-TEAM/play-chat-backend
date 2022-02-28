@@ -14,35 +14,35 @@ kycho;
 == Members
 회원과 관련된 리소스
 
-[[resources_members_join]]
-=== Member Join
+[[resources_members_sign-up]]
+=== Member Sign Up
 회원가입에 사용될 api
 
-[[resources_members_join_request]]
+[[resources_members_sign-up_request]]
 ==== Request
 ===== Request HTTP Messages
-include::{snippets}/member-join/http-request.adoc[]
+include::{snippets}/member-sign-up/http-request.adoc[]
 
 ===== Request Header
-include::{snippets}/member-join/request-headers.adoc[]
+include::{snippets}/member-sign-up/request-headers.adoc[]
 
 ===== Request Parameter
-include::{snippets}/member-join/request-parameters.adoc[]
-include::{snippets}/member-join/request-parts.adoc[]
+include::{snippets}/member-sign-up/request-parameters.adoc[]
+include::{snippets}/member-sign-up/request-parts.adoc[]
 
-[[resources_members_join_response]]
+[[resources_members_sign-up_response]]
 ==== Response
 ===== Response Body
-include::{snippets}/member-join/response-body.adoc[]
+include::{snippets}/member-sign-up/response-body.adoc[]
 ===== Response Field
-include::{snippets}/member-join/response-fields.adoc[]
+include::{snippets}/member-sign-up/response-fields.adoc[]
 
-[[resources_members_join_sample]]
+[[resources_members_sign-up_sample]]
 ==== Sample
 ===== Reqeust
-include::{snippets}/member-join/curl-request.adoc[]
+include::{snippets}/member-sign-up/curl-request.adoc[]
 ===== Response
-include::{snippets}/member-join/http-response.adoc[]
+include::{snippets}/member-sign-up/http-response.adoc[]
 
 
 

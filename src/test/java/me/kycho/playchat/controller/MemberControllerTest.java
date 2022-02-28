@@ -65,7 +65,7 @@ class MemberControllerTest {
 
     @Test
     @DisplayName("회원가입 테스트 정상")
-    void joinTest() throws Exception {
+    void signUpTest() throws Exception {
 
         // given
         String email = "member@email.com";
@@ -80,7 +80,7 @@ class MemberControllerTest {
 
         // when & then
         mockMvc.perform(
-                multipart("/api/members/join")
+                multipart("/api/members/sign-up")
                     .file(profileImage)
                     .param("email", email)
                     .param("nickname", nickname)
@@ -93,7 +93,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("email").value(email))
             .andExpect(jsonPath("nickname").value(nickname))
             .andDo(
-                document("member-join",
+                document("member-sign-up",
                     preprocessRequest(
                         new PartContentModifyingPreprocessor()
                     ),
@@ -124,7 +124,7 @@ class MemberControllerTest {
 
     @Test
     @DisplayName("회원가입 테스트 ERROR(이메일 중복)")
-    void joinErrorTest_duplicatedEmail() throws Exception {
+    void signUpErrorTest_duplicatedEmail() throws Exception {
 
         // given
         String duplicatedEmail = "member@email.com";
@@ -143,7 +143,7 @@ class MemberControllerTest {
 
         // when & then
         mockMvc.perform(
-                multipart("/api/members/join")
+                multipart("/api/members/sign-up")
                     .file(profileImage)
                     .param("email", duplicatedEmail)
                     .param("nickname", "nickname")

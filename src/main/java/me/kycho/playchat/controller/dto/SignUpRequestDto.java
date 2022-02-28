@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinRequestDto {
+public class SignUpRequestDto {
 
     @Email
     @NotBlank

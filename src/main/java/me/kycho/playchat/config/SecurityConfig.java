@@ -41,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-            .antMatchers("/api/members/join").permitAll()
+            .antMatchers("/api/members/sign-up").permitAll()
             .antMatchers("/api/authenticate").permitAll()
             .anyRequest().authenticated()
             .and()
