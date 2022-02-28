@@ -1,5 +1,6 @@
 package me.kycho.playchat.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -115,7 +116,8 @@ class MemberControllerTest {
                         parameterWithName("nickname").description("회원가입에 사용할 닉네임 (필수)")
                     ),
                     requestParts(
-                        partWithName("profileImage").description("프로필 사진으로 사용될 이미지 파일 (필수)")
+                        partWithName("profileImage")
+                            .description("프로필 사진으로 사용될 이미지 파일 +" + "\n" + "(없으면 기본이미지 사용)")
                     ),
                     responseFields(
                         fieldWithPath("email").description("회원가입이 왼료된 회원의 이메일"),
@@ -123,6 +125,33 @@ class MemberControllerTest {
                     )
                 )
             );
+    }
+
+    @Test
+    @DisplayName("회원가입 테스트 정상 (프로필이미지 없이)")
+    void signUpTest_without_profileImage() throws Exception {
+
+        // given
+        String email = "member@email.com";
+        String nickname = "member";
+        String password = "aaaaaa1!";
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .param("email", email)
+                    .param("nickname", nickname)
+                    .param("password", password)
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("email").value(email))
+            .andExpect(jsonPath("nickname").value(nickname));
+
+        Member signedUpMember = memberRepository.findByEmail(email).get();
+        assertThat(signedUpMember.getImageUrl()).endsWith("/images/default-profile.png");
     }
 
     @Test

@@ -2,7 +2,6 @@ package me.kycho.playchat.controller.dto;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -33,17 +32,16 @@ public class SignUpRequestDto {
     @Size(min = 1, max = 50, message = "닉네임은 최대 50자까지 가능합니다.")
     private String nickname;
 
-    @NotNull  // TODO : 좀더 확인해봐야함
     private MultipartFile profileImage;
 
-    private String profileImageFileName;
+    private String profileImageUrl;
 
     public Member toMemberEntity() {
         return Member.builder()
             .email(email)
             .password(password)
             .nickname(nickname)
-            .imageUrl(profileImageFileName)
+            .imageUrl(profileImageUrl)
             .build();
     }
 }

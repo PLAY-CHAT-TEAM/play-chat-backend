@@ -4,8 +4,8 @@ import java.io.IOException;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.common.FileStore;
-import me.kycho.playchat.controller.dto.SignUpResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
+import me.kycho.playchat.controller.dto.SignUpResponseDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.service.MemberService;
 import org.springframework.http.HttpStatus;
@@ -25,13 +25,20 @@ public class MemberController {
     private final FileStore fileStore;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<SignUpResponseDto> signUp(@Valid @ModelAttribute SignUpRequestDto signUpRequestDto)
-        throws IOException {
-        // TODO : 예외 처리
+    public ResponseEntity<SignUpResponseDto> signUp(
+        @Valid @ModelAttribute SignUpRequestDto signUpRequestDto) throws IOException {
 
         MultipartFile profileImage = signUpRequestDto.getProfileImage();
         String storedFileName = fileStore.storeFile(profileImage);
-        signUpRequestDto.setProfileImageFileName(storedFileName);
+
+        String profileImageUrl = "http://localhost:8080";
+        if (storedFileName == null) {
+            profileImageUrl += "/images/default-profile.png";
+        } else {
+            profileImageUrl += "/members/profile-image/" + storedFileName;
+        }
+
+        signUpRequestDto.setProfileImageUrl(profileImageUrl);
 
         Member signedUpMember = memberService.signUp(signUpRequestDto.toMemberEntity());
         SignUpResponseDto response = SignUpResponseDto.from(signedUpMember);
