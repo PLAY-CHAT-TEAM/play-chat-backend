@@ -9,9 +9,9 @@ import me.kycho.playchat.domain.Member;
 public class JoinResponseDto {
 
     private String email;
-    private String name;
+    private String nickname;
 
     public static JoinResponseDto from(Member member) {
-        return new JoinResponseDto(member.getEmail(), member.getName());
+        return new JoinResponseDto(member.getEmail(), member.getNickname());
     }
 }

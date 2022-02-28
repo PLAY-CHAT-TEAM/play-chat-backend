@@ -41,7 +41,6 @@ import org.springframework.restdocs.operation.OperationRequestFactory;
 import org.springframework.restdocs.operation.OperationRequestPart;
 import org.springframework.restdocs.operation.OperationRequestPartFactory;
 import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
-import org.springframework.restdocs.operation.preprocess.Preprocessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,7 +69,7 @@ class MemberControllerTest {
 
         // given
         String email = "member@email.com";
-        String name = "member";
+        String nickname = "member";
         String password = "password";
         MockMultipartFile profileImage = new MockMultipartFile(
             "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
@@ -84,7 +83,7 @@ class MemberControllerTest {
                 multipart("/api/members/join")
                     .file(profileImage)
                     .param("email", email)
-                    .param("name", name)
+                    .param("nickname", nickname)
                     .param("password", password)
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
@@ -92,7 +91,7 @@ class MemberControllerTest {
             .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("email").value(email))
-            .andExpect(jsonPath("name").value(name))
+            .andExpect(jsonPath("nickname").value(nickname))
             .andDo(
                 document("member-join",
                     preprocessRequest(
@@ -110,14 +109,14 @@ class MemberControllerTest {
                     requestParameters(
                         parameterWithName("email").description("회원가입에 사용할 이메일 (필수)"),
                         parameterWithName("password").description("회원가입에 사용할 비빌번호 (필수)"),
-                        parameterWithName("name").description("회원가입에 사용할 이름 (필수)")
+                        parameterWithName("nickname").description("회원가입에 사용할 닉네임 (필수)")
                     ),
                     requestParts(
                         partWithName("profileImage").description("프로필 사진으로 사용될 이미지 파일 (필수)")
                     ),
                     responseFields(
                         fieldWithPath("email").description("회원가입이 왼료된 회원의 이메일"),
-                        fieldWithPath("name").description("회원가입이 왼료된 회원의 이름")
+                        fieldWithPath("nickname").description("회원가입이 왼료된 회원의 닉네임")
                     )
                 )
             );
@@ -131,7 +130,7 @@ class MemberControllerTest {
         String duplicatedEmail = "member@email.com";
         memberRepository.save(Member.builder()
             .email(duplicatedEmail)
-            .name("member")
+            .nickname("member")
             .password("password")
             .imageUrl("image_url")
             .build());
@@ -147,7 +146,7 @@ class MemberControllerTest {
                 multipart("/api/members/join")
                     .file(profileImage)
                     .param("email", duplicatedEmail)
-                    .param("name", "name")
+                    .param("nickname", "nickname")
                     .param("password", "password")
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)

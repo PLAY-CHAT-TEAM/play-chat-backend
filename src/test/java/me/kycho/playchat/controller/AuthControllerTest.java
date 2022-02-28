@@ -64,7 +64,7 @@ class AuthControllerTest {
         Member member = Member.builder()
             .email(email)
             .password(passwordEncoder.encode(password))
-            .name("kycho")
+            .nickname("kycho")
             .imageUrl("image_url")
             .build();
         memberRepository.save(member);
