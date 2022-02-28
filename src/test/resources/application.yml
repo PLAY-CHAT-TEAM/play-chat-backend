@@ -19,6 +19,8 @@ logging.level:
 
 file.dir: /Users/kycho/Desktop/upload/
 
+backend.url: http://localhost:8080
+
 jwt:
   header: Authorization
   #echo 'secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecret'|base64

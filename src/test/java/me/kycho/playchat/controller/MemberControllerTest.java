@@ -1,5 +1,6 @@
 package me.kycho.playchat.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -31,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,6 +67,9 @@ class MemberControllerTest {
 
     @MockBean
     FileStore fileStore;
+
+    @Value("${backend.url}")
+    String backendUrl;
 
     @Test
     @DisplayName("회원가입 테스트 정상")
@@ -115,7 +120,8 @@ class MemberControllerTest {
                         parameterWithName("nickname").description("회원가입에 사용할 닉네임 (필수)")
                     ),
                     requestParts(
-                        partWithName("profileImage").description("프로필 사진으로 사용될 이미지 파일 (필수)")
+                        partWithName("profileImage")
+                            .description("프로필 사진으로 사용될 이미지 파일 +" + "\n" + "(없으면 기본이미지 사용)")
                     ),
                     responseFields(
                         fieldWithPath("email").description("회원가입이 왼료된 회원의 이메일"),
@@ -126,11 +132,39 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("회원가입 테스트 정상 (프로필이미지 없이)")
+    void signUpTest_without_profileImage() throws Exception {
+
+        // given
+        String email = "member@email.com";
+        String nickname = "member";
+        String password = "aaaaaa1!";
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .param("email", email)
+                    .param("nickname", nickname)
+                    .param("password", password)
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("email").value(email))
+            .andExpect(jsonPath("nickname").value(nickname));
+
+        Member signedUpMember = memberRepository.findByEmail(email).get();
+        assertThat(signedUpMember.getImageUrl()).isEqualTo(backendUrl + "/images/default-profile.png");
+    }
+
+    @Test
     @DisplayName("회원가입 테스트 ERROR(이메일 중복)")
     void signUpErrorTest_duplicatedEmail() throws Exception {
 
         // given
         String duplicatedEmail = "member@email.com";
+
         memberRepository.save(Member.builder()
             .email(duplicatedEmail)
             .nickname("member")
@@ -138,16 +172,9 @@ class MemberControllerTest {
             .imageUrl("image_url")
             .build());
 
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
         // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", duplicatedEmail)
                     .param("nickname", "nickname")
                     .param("password", "aaaaaa1!")
@@ -167,18 +194,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaa", "aaa@", "@bbb"})
     void signUpErrorTest_wrongEmail(String wrongEmail) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", wrongEmail)
                     .param("nickname", "nickname")
                     .param("password", "aaaaaa1!")
@@ -205,18 +222,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaaa!@2", "ccc@3cccccccccccc", "bbbbbbbb1", "AAAAAAAAA!", "@11111111"})
     void signUpErrorTest_wrongPassword(String wrongPassword) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", "member@email.com")
                     .param("nickname", "nickname")
                     .param("password", wrongPassword)
@@ -240,18 +247,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
     void signUpErrorTest_wrongNickname(String wrongNickname) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", "member@email.com")
                     .param("nickname", wrongNickname)
                     .param("password", "aaaaaaaa1!")
