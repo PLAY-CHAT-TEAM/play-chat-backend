@@ -27,6 +27,9 @@ import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,6 +46,7 @@ import org.springframework.restdocs.operation.OperationRequestPartFactory;
 import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 
 @SpringBootTest
@@ -155,6 +159,46 @@ class MemberControllerTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("status").value(HttpStatus.CONFLICT.value()))
             .andExpect(jsonPath("message").value("Duplicated Email."))
+        ;
+    }
+
+    @DisplayName("회원가입 테스트 ERROR(잘못된 이메일)")
+    @ParameterizedTest(name = "{index}: 잘못된 이메일 : {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = {"aaa", "aaa@", "@bbb"})
+    void signUpErrorTest_wrongEmail(String wrongEmail) throws Exception {
+        // given
+        String defaultMessage = StringUtils.hasText(wrongEmail) ? "이메일 형식이어야 합니다." : "이메일은 필수값입니다.";
+
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .file(profileImage)
+                    .param("email", wrongEmail)
+                    .param("nickname", "nickname")
+                    .param("password", "password")
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("email"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").value(defaultMessage))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongEmail))
+            .andExpect(jsonPath("fieldErrors.length()").value(1))
+//            TODO : docs
+//            .andDo(
+//                document("member-signup-error")
+//            )
         ;
     }
 

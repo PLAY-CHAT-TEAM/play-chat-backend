@@ -12,13 +12,14 @@ import me.kycho.playchat.domain.Member;
 import org.springframework.web.multipart.MultipartFile;
 
 @Builder
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignUpRequestDto {
 
-    @Email
-    @NotBlank
+    @Email(message = "이메일 형식이어야 합니다.")
+    @NotBlank(message = "이메일은 필수값입니다.")
     private String email;
 
     @NotBlank
