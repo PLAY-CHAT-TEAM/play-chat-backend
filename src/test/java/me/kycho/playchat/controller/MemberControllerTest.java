@@ -160,6 +160,7 @@ class MemberControllerTest {
 
         // given
         String duplicatedEmail = "member@email.com";
+
         memberRepository.save(Member.builder()
             .email(duplicatedEmail)
             .nickname("member")
@@ -167,16 +168,9 @@ class MemberControllerTest {
             .imageUrl("image_url")
             .build());
 
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
         // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", duplicatedEmail)
                     .param("nickname", "nickname")
                     .param("password", "aaaaaa1!")
@@ -196,18 +190,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaa", "aaa@", "@bbb"})
     void signUpErrorTest_wrongEmail(String wrongEmail) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", wrongEmail)
                     .param("nickname", "nickname")
                     .param("password", "aaaaaa1!")
@@ -234,18 +218,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaaa!@2", "ccc@3cccccccccccc", "bbbbbbbb1", "AAAAAAAAA!", "@11111111"})
     void signUpErrorTest_wrongPassword(String wrongPassword) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", "member@email.com")
                     .param("nickname", "nickname")
                     .param("password", wrongPassword)
@@ -269,18 +243,8 @@ class MemberControllerTest {
     @ValueSource(strings = {"aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
     void signUpErrorTest_wrongNickname(String wrongNickname) throws Exception {
 
-        // given
-        MockMultipartFile profileImage = new MockMultipartFile(
-            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
-            new FileInputStream("./src/test/resources/static/imageForTest.png")
-        );
-
-        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
-
-        // when & then
         mockMvc.perform(
                 multipart("/api/members/sign-up")
-                    .file(profileImage)
                     .param("email", "member@email.com")
                     .param("nickname", wrongNickname)
                     .param("password", "aaaaaaaa1!")
