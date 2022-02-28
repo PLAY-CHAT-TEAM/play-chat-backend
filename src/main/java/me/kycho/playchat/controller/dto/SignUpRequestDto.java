@@ -4,6 +4,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,7 +29,8 @@ public class SignUpRequestDto {
         message = "비밀번호는 영문자, 숫자, 특수기호($@!%*#?&)가 적어도 1개 이상씩 포함된 길이 8~16인 글자여야 합니다.")
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "닉네임은 필수값입니다.")
+    @Size(min = 1, max = 50, message = "닉네임은 최대 50자까지 가능합니다.")
     private String nickname;
 
     @NotNull  // TODO : 좀더 확인해봐야함

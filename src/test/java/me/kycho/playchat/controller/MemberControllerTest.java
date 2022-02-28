@@ -233,6 +233,41 @@ class MemberControllerTest {
         ;
     }
 
+
+    @DisplayName("회원가입 테스트 ERROR(잘못된 닉네임)")
+    @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = {"aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
+    void signUpErrorTest_wrongNickname(String wrongNickname) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .file(profileImage)
+                    .param("email", "member@email.com")
+                    .param("nickname", wrongNickname)
+                    .param("password", "aaaaaaaa1!")
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("nickname"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
+        ;
+    }
+
     static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
 
         private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();
