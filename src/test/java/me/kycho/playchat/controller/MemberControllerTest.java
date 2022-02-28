@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,6 +67,9 @@ class MemberControllerTest {
 
     @MockBean
     FileStore fileStore;
+
+    @Value("${backend.url}")
+    String backendUrl;
 
     @Test
     @DisplayName("회원가입 테스트 정상")
@@ -151,7 +155,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("nickname").value(nickname));
 
         Member signedUpMember = memberRepository.findByEmail(email).get();
-        assertThat(signedUpMember.getImageUrl()).endsWith("/images/default-profile.png");
+        assertThat(signedUpMember.getImageUrl()).isEqualTo(backendUrl + "/images/default-profile.png");
     }
 
     @Test
