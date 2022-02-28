@@ -27,6 +27,9 @@ import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -70,7 +73,7 @@ class MemberControllerTest {
         // given
         String email = "member@email.com";
         String nickname = "member";
-        String password = "password";
+        String password = "aaaaaa1!";
         MockMultipartFile profileImage = new MockMultipartFile(
             "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
             new FileInputStream("./src/test/resources/static/imageForTest.png")
@@ -147,7 +150,7 @@ class MemberControllerTest {
                     .file(profileImage)
                     .param("email", duplicatedEmail)
                     .param("nickname", "nickname")
-                    .param("password", "password")
+                    .param("password", "aaaaaa1!")
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
@@ -155,6 +158,113 @@ class MemberControllerTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("status").value(HttpStatus.CONFLICT.value()))
             .andExpect(jsonPath("message").value("Duplicated Email."))
+        ;
+    }
+
+    @DisplayName("회원가입 테스트 ERROR(잘못된 이메일)")
+    @ParameterizedTest(name = "{index}: 잘못된 이메일 : {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = {"aaa", "aaa@", "@bbb"})
+    void signUpErrorTest_wrongEmail(String wrongEmail) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .file(profileImage)
+                    .param("email", wrongEmail)
+                    .param("nickname", "nickname")
+                    .param("password", "aaaaaa1!")
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("email"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongEmail))
+//            TODO : docs
+//            .andDo(
+//                document("member-signup-error")
+//            )
+        ;
+    }
+
+    @DisplayName("회원가입 테스트 ERROR(잘못된 비밀번호)")
+    @ParameterizedTest(name = "{index}: 잘못된 비밀번호 : {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = {"aaaa!@2", "ccc@3cccccccccccc", "bbbbbbbb1", "AAAAAAAAA!", "@11111111"})
+    void signUpErrorTest_wrongPassword(String wrongPassword) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .file(profileImage)
+                    .param("email", "member@email.com")
+                    .param("nickname", "nickname")
+                    .param("password", wrongPassword)
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("password"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongPassword))
+        ;
+    }
+
+
+    @DisplayName("회원가입 테스트 ERROR(잘못된 닉네임)")
+    @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = {"aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
+    void signUpErrorTest_wrongNickname(String wrongNickname) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/sign-up")
+                    .file(profileImage)
+                    .param("email", "member@email.com")
+                    .param("nickname", wrongNickname)
+                    .param("password", "aaaaaaaa1!")
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("nickname"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
         ;
     }
 
