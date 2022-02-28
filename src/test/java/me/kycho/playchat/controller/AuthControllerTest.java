@@ -55,7 +55,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("인증 요청 테스트 정상")
-    void authenticate() throws Exception {
+    void signIn() throws Exception {
 
         // given
         String email = "member@naver.com";
@@ -73,7 +73,7 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(
-                post("/api/authenticate")
+                post("/api/auth/sign-in")
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(signInRequestDto))
@@ -82,7 +82,7 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("token").exists())
             .andDo(
-                document("member-login",
+                document("auth-signin",
                     preprocessRequest(
                         prettyPrint()
                     ),

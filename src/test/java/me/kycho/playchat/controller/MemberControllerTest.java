@@ -93,7 +93,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("email").value(email))
             .andExpect(jsonPath("nickname").value(nickname))
             .andDo(
-                document("member-sign-up",
+                document("member-signup",
                     preprocessRequest(
                         new PartContentModifyingPreprocessor()
                     ),
