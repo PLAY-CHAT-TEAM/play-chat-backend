@@ -10,69 +10,73 @@ kycho;
 [[resources]]
 = Resources
 
+
+[[resources_auth]]
+== Authentication
+인증과 관련된 리소스
+
+[[resources_auth_signin]]
+=== Sign In
+인증(토큰 발급)에 사용될 api
+
+[[resources_auth_signin_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/auth-signin/http-request.adoc[]
+
+===== Request Header
+include::{snippets}/auth-signin/request-headers.adoc[]
+
+===== Request Field
+include::{snippets}/auth-signin/request-fields.adoc[]
+
+[[resources_auth_signin_response]]
+==== Response
+===== Response Body
+include::{snippets}/auth-signin/response-body.adoc[]
+===== Response Field
+include::{snippets}/auth-signin/response-fields.adoc[]
+
+[[resources_auth_signin_sample]]
+==== Sample
+===== Reqeust
+include::{snippets}/auth-signin/curl-request.adoc[]
+===== Response
+include::{snippets}/auth-signin/http-response.adoc[]
+
+
+
+
 [[resources_members]]
 == Members
 회원과 관련된 리소스
 
-[[resources_members_join]]
-=== Member Join
+[[resources_members_signup]]
+=== Sign Up
 회원가입에 사용될 api
 
-[[resources_members_join_request]]
+[[resources_members_signup_request]]
 ==== Request
 ===== Request HTTP Messages
-include::{snippets}/member-join/http-request.adoc[]
+include::{snippets}/member-signup/http-request.adoc[]
 
 ===== Request Header
-include::{snippets}/member-join/request-headers.adoc[]
+include::{snippets}/member-signup/request-headers.adoc[]
 
 ===== Request Parameter
-include::{snippets}/member-join/request-parameters.adoc[]
-include::{snippets}/member-join/request-parts.adoc[]
+include::{snippets}/member-signup/request-parameters.adoc[]
+include::{snippets}/member-signup/request-parts.adoc[]
 
-[[resources_members_join_response]]
+[[resources_members_signup_response]]
 ==== Response
 ===== Response Body
-include::{snippets}/member-join/response-body.adoc[]
+include::{snippets}/member-signup/response-body.adoc[]
 ===== Response Field
-include::{snippets}/member-join/response-fields.adoc[]
+include::{snippets}/member-signup/response-fields.adoc[]
 
-[[resources_members_join_sample]]
+[[resources_members_signup_sample]]
 ==== Sample
 ===== Reqeust
-include::{snippets}/member-join/curl-request.adoc[]
+include::{snippets}/member-signup/curl-request.adoc[]
 ===== Response
-include::{snippets}/member-join/http-response.adoc[]
-
-
-
-
-[[resources_members_login]]
-=== Member Login
-
-인증(토큰 발급)에 사용될 api
-
-[[resources_members_login_request]]
-==== Request
-===== Request HTTP Messages
-include::{snippets}/member-login/http-request.adoc[]
-
-===== Request Header
-include::{snippets}/member-login/request-headers.adoc[]
-
-===== Request Field
-include::{snippets}/member-login/request-fields.adoc[]
-
-[[resources_members_login_response]]
-==== Response
-===== Response Body
-include::{snippets}/member-login/response-body.adoc[]
-===== Response Field
-include::{snippets}/member-login/response-fields.adoc[]
-
-[[resources_members_login_sample]]
-==== Sample
-===== Reqeust
-include::{snippets}/member-login/curl-request.adoc[]
-===== Response
-include::{snippets}/member-login/http-response.adoc[]
+include::{snippets}/member-signup/http-response.adoc[]

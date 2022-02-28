@@ -27,12 +27,12 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("회원 가입 테스트")
-    void joinTest() {
+    void signUpTest() {
         // given
         Member member = Member.builder()
             .email("member@email.com")
             .password("password")
-            .name("name")
+            .nickname("nickname")
             .imageUrl("image_url")
             .build();
 
@@ -40,26 +40,26 @@ class MemberServiceTest {
             .id(1L)
             .email(member.getEmail())
             .password(member.getPassword())
-            .name(member.getName())
+            .nickname(member.getNickname())
             .imageUrl(member.getImageUrl())
             .build();
         given(memberRepository.save(member)).willReturn(savedMember);
 
         // when
-        Member joinResultMember = memberService.join(member);
+        Member signedUpMember = memberService.signUp(member);
 
         // then
-        assertThat(joinResultMember).usingRecursiveComparison().isEqualTo(savedMember);
+        assertThat(signedUpMember).usingRecursiveComparison().isEqualTo(savedMember);
     }
 
     @Test
     @DisplayName("회원 가입 시 중복된 email이면 에러발생")
-    void joinErrorTest_duplicated_email() {
+    void signUpErrorTest_duplicated_email() {
         // given
         Member member = Member.builder()
             .email("member@email.com")
             .password("password")
-            .name("name")
+            .nickname("nickname")
             .imageUrl("image_url")
             .build();
 
@@ -67,7 +67,7 @@ class MemberServiceTest {
             .id(1L)
             .email(member.getEmail())
             .password(member.getPassword())
-            .name(member.getName())
+            .nickname(member.getNickname())
             .imageUrl(member.getImageUrl())
             .build();
 
@@ -75,7 +75,7 @@ class MemberServiceTest {
 
         // when & then
         assertThrows(DuplicatedEmailException.class, () -> {
-            memberService.join(member);
+            memberService.signUp(member);
         }, "기존에 가입된 email로 가입할 수 없습니다.");
     }
 }

@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinRequestDto {
+public class SignUpRequestDto {
 
     @Email
     @NotBlank
@@ -25,7 +25,7 @@ public class JoinRequestDto {
     private String password;
 
     @NotBlank
-    private String name;
+    private String nickname;
 
     @NotNull  // TODO : 좀더 확인해봐야함
     private MultipartFile profileImage;
@@ -36,7 +36,7 @@ public class JoinRequestDto {
         return Member.builder()
             .email(email)
             .password(password)
-            .name(name)
+            .nickname(nickname)
             .imageUrl(profileImageFileName)
             .build();
     }

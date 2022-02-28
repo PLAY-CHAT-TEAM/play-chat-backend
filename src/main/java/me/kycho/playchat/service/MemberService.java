@@ -18,7 +18,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Member join(Member member) {
+    public Member signUp(Member member) {
         validateDuplicateMember(member);
 
         String encodedPassword = passwordEncoder.encode(member.getPassword());

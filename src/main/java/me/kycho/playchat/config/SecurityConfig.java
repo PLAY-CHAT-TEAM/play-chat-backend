@@ -41,8 +41,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-            .antMatchers("/api/members/join").permitAll()
-            .antMatchers("/api/authenticate").permitAll()
+            .antMatchers("/api/members/sign-up").permitAll()
+            .antMatchers("/api/auth/sign-in").permitAll()
             .anyRequest().authenticated()
             .and()
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider),
