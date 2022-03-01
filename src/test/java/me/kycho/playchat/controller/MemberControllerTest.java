@@ -294,6 +294,15 @@ class MemberControllerTest {
         uploadedFile.delete();
     }
 
+    @Test
+    @DisplayName("프로필 이미지 조회 ERROR(존재하지 않는 이미지)")
+    void downloadImageTest_notFound() throws Exception {
+
+        // when & then
+        mockMvc.perform(get("/api/members/profile-image/noFile.png"))
+            .andExpect(status().isNotFound());
+    }
+
     static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
 
         private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();

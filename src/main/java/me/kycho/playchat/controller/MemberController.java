@@ -1,7 +1,6 @@
 package me.kycho.playchat.controller;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import javax.validation.Valid;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
@@ -62,12 +61,14 @@ public class MemberController {
 
     @GetMapping("/profile-image/{filename}")
     public ResponseEntity<Resource> downloadImage(@PathVariable String filename)
-        throws MalformedURLException {
+        throws IOException {
 
         UrlResource urlResource = new UrlResource("file:" + fileStore.getFullPath(filename));
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE)
-            .body(urlResource);
+        if (urlResource.exists()) {
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE)
+                .body(urlResource);
+        }
+        return ResponseEntity.notFound().build();
     }
 }
