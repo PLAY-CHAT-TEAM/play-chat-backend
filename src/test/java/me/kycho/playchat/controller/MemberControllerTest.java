@@ -17,7 +17,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -375,7 +374,7 @@ class MemberControllerTest {
     @DisplayName("회원 전체 조회 정상")
     void getMemberListTest() throws Exception {
         // given
-        int memberNum = 15;
+        int memberNum = 3;
         createMembers(memberNum);
 
         // when & then
@@ -390,6 +389,22 @@ class MemberControllerTest {
             .andExpect(jsonPath("$[0].nickname").exists())
             .andExpect(jsonPath("$[0].imageUrl").exists())
             .andExpect(jsonPath("$[0].password").doesNotExist())
+            .andDo(
+                document("member-getList",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("[].id").description("조회된 회원의 ID번호"),
+                        fieldWithPath("[].email").description("조회된 회원의 이메일 정보"),
+                        fieldWithPath("[].nickname").description("조회된 회원의 닉네임 정보"),
+                        fieldWithPath("[].imageUrl").description("조회된 회원의 프로필 이미지 URL")
+                    )
+                )
+            )
         ;
     }
 
@@ -403,8 +418,6 @@ class MemberControllerTest {
         mockMvc.perform(get("/api/members/list"))
             .andExpect(status().isUnauthorized());
     }
-
-
 
     @Test
     @DisplayName("프로필 이미지 조회 정상")
