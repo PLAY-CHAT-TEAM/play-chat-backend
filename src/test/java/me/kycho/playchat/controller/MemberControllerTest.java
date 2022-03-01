@@ -285,6 +285,33 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("내 정보 조회 정상")
+    void getMyInfoTest() throws Exception {
+
+        // given
+        String email = "kycho@naver.com";
+        String nickname = "kycho";
+        String imageUrl = "kycho_image_url";
+        long id = createMember(email, nickname, imageUrl);
+        createMembers(5);
+
+        String token = generateToken(email);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/me")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("id").value(id))
+            .andExpect(jsonPath("email").value(email))
+            .andExpect(jsonPath("nickname").value(nickname))
+            .andExpect(jsonPath("imageUrl").value(imageUrl))
+            .andExpect(jsonPath("password").doesNotExist())
+        ;
+    }
+
+    @Test
     @DisplayName("id로 회원 조회 정상")
     void getMemberTest() throws Exception {
         // given
@@ -489,6 +516,17 @@ class MemberControllerTest {
             .andExpect(status().isNotFound());
     }
 
+    private long createMember(String email, String nickname, String imageUrl) {
+        Member member = Member.builder()
+            .email(email)
+            .password("aaaaaaa1!")
+            .nickname(nickname)
+            .imageUrl(imageUrl)
+            .build();
+        Member signedUpMember = memberService.signUp(member);
+        return signedUpMember.getId();
+    }
+
     private void createMembers(int memberNum) {
         for (int i = 1; i <= memberNum; i++) {
             Member member = Member.builder()
@@ -502,8 +540,10 @@ class MemberControllerTest {
     }
 
     private String generateToken() {
+        return generateToken("test@naver.com");
+    }
 
-        String email = "test@naver.com";
+    private String generateToken(String email) {
         List<GrantedAuthority> authorities = Collections
             .singletonList(new SimpleGrantedAuthority("ROLE_MEMBER"));
 

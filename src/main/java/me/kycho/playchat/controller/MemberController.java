@@ -17,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,6 +62,13 @@ public class MemberController {
         Member signedUpMember = memberService.signUp(signUpRequestDto.toMemberEntity());
         SignUpResponseDto response = SignUpResponseDto.from(signedUpMember);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponseDto> getMyInfo(@AuthenticationPrincipal User currentUser) {
+        String currentMemberEmail = currentUser.getUsername();
+        Member currentMember = memberService.getMemberByEmail(currentMemberEmail);
+        return ResponseEntity.ok().body(MemberResponseDto.from(currentMember));
     }
 
     @GetMapping("/{memberId}")
