@@ -1,8 +1,11 @@
 package me.kycho.playchat.controller;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import me.kycho.playchat.common.FileStore;
+import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
 import me.kycho.playchat.domain.Member;
@@ -14,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,6 +62,29 @@ public class MemberController {
         Member signedUpMember = memberService.signUp(signUpRequestDto.toMemberEntity());
         SignUpResponseDto response = SignUpResponseDto.from(signedUpMember);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponseDto> getMyInfo(@AuthenticationPrincipal User currentUser) {
+        String currentMemberEmail = currentUser.getUsername();
+        Member currentMember = memberService.getMemberByEmail(currentMemberEmail);
+        return ResponseEntity.ok().body(MemberResponseDto.from(currentMember));
+    }
+
+    @GetMapping("/{memberId}")
+    public ResponseEntity<MemberResponseDto> getMember(@PathVariable Long memberId) {
+        Member member = memberService.getMember(memberId);
+        return ResponseEntity.ok().body(MemberResponseDto.from(member));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<MemberResponseDto>> getMemberList() {
+        List<Member> members = memberService.getMemberAll();
+
+        List<MemberResponseDto> collect = members.stream().map(MemberResponseDto::from)
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok().body(collect);
     }
 
     @GetMapping("/profile-image/{filename}")

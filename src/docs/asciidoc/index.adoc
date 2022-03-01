@@ -10,99 +10,186 @@ kycho;
 [[resources]]
 = Resources
 
-
+// ------------------------------------------------------------------------------------------------
+//  Authentication
+// ------------------------------------------------------------------------------------------------
 [[resources_auth]]
 == Authentication
 인증과 관련된 리소스
 
-[[resources_auth_signin]]
+// ------------------------------------------------------------------------------------------------
+[[resources_auth_signIn]]
 === Sign In
 인증(토큰 발급)에 사용될 api
 
-[[resources_auth_signin_request]]
+[[resources_auth_signIn_request]]
 ==== Request
 ===== Request HTTP Messages
-include::{snippets}/auth-signin/http-request.adoc[]
+include::{snippets}/auth-signIn/http-request.adoc[]
 
 ===== Request Header
-include::{snippets}/auth-signin/request-headers.adoc[]
+include::{snippets}/auth-signIn/request-headers.adoc[]
 
 ===== Request Field
-include::{snippets}/auth-signin/request-fields.adoc[]
+include::{snippets}/auth-signIn/request-fields.adoc[]
 
-[[resources_auth_signin_response]]
+[[resources_auth_signIn_response]]
 ==== Response
 ===== Response Body
-include::{snippets}/auth-signin/response-body.adoc[]
+include::{snippets}/auth-signIn/response-body.adoc[]
 ===== Response Field
-include::{snippets}/auth-signin/response-fields.adoc[]
+include::{snippets}/auth-signIn/response-fields.adoc[]
 
-[[resources_auth_signin_sample]]
+[[resources_auth_signIn_sample]]
 ==== Sample
-===== Reqeust
-include::{snippets}/auth-signin/curl-request.adoc[]
+===== Request
+include::{snippets}/auth-signIn/curl-request.adoc[]
 ===== Response
-include::{snippets}/auth-signin/http-response.adoc[]
+include::{snippets}/auth-signIn/http-response.adoc[]
 
-
-
-
+// ------------------------------------------------------------------------------------------------
+// Members
+// ------------------------------------------------------------------------------------------------
 [[resources_members]]
 == Members
 회원과 관련된 리소스
 
-[[resources_members_signup]]
+// ------------------------------------------------------------------------------------------------
+[[resources_members_signUp]]
 === Sign Up
 회원가입에 사용될 api
 
-[[resources_members_signup_request]]
+[[resources_members_signUp_request]]
 ==== Request
 ===== Request HTTP Messages
-include::{snippets}/member-signup/http-request.adoc[]
+include::{snippets}/member-signUp/http-request.adoc[]
 
 ===== Request Header
-include::{snippets}/member-signup/request-headers.adoc[]
+include::{snippets}/member-signUp/request-headers.adoc[]
 
 ===== Request Parameter
-include::{snippets}/member-signup/request-parameters.adoc[]
-include::{snippets}/member-signup/request-parts.adoc[]
+include::{snippets}/member-signUp/request-parameters.adoc[]
+include::{snippets}/member-signUp/request-parts.adoc[]
 
-[[resources_members_signup_response]]
+[[resources_members_signUp_response]]
 ==== Response
 ===== Response Body
-include::{snippets}/member-signup/response-body.adoc[]
+include::{snippets}/member-signUp/response-body.adoc[]
 ===== Response Field
-include::{snippets}/member-signup/response-fields.adoc[]
+include::{snippets}/member-signUp/response-fields.adoc[]
 
-[[resources_members_signup_sample]]
+[[resources_members_signUp_sample]]
 ==== Sample
-===== Reqeust
-include::{snippets}/member-signup/curl-request.adoc[]
+===== Request
+include::{snippets}/member-signUp/curl-request.adoc[]
 ===== Response
-include::{snippets}/member-signup/http-response.adoc[]
+include::{snippets}/member-signUp/http-response.adoc[]
 
+// ------------------------------------------------------------------------------------------------
+[[resources_members_me]]
+=== Get My Info
+내 정보 조회에 사용될 api
 
+[[resources_members_me_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-me/http-request.adoc[]
 
-[[resources_members_profileimage]]
+===== Request Header
+include::{snippets}/member-me/request-headers.adoc[]
+
+[[resources_members_me_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-me/response-body.adoc[]
+===== Response Field
+include::{snippets}/member-me/response-fields.adoc[]
+
+[[resources_members_me_sample]]
+==== Sample
+===== Request
+include::{snippets}/member-me/curl-request.adoc[]
+===== Response
+include::{snippets}/member-me/http-response.adoc[]
+
+// ------------------------------------------------------------------------------------------------
+[[resources_members_get]]
+=== Get Member
+회원조회에 사용될 api
+
+[[resources_members_get_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-get/http-request.adoc[]
+
+===== Request Header
+include::{snippets}/member-get/request-headers.adoc[]
+
+===== Request Path Parameter
+include::{snippets}/member-get/path-parameters.adoc[]
+
+[[resources_members_get_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-get/response-body.adoc[]
+===== Response Field
+include::{snippets}/member-get/response-fields.adoc[]
+
+[[resources_members_get_sample]]
+==== Sample
+===== Request
+include::{snippets}/member-get/curl-request.adoc[]
+===== Response
+include::{snippets}/member-get/http-response.adoc[]
+
+// ------------------------------------------------------------------------------------------------
+[[resources_members_getList]]
+=== Get Member List
+회원 전체 조회에 사용될 api
+
+[[resources_members_getList_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-getList/http-request.adoc[]
+
+===== Request Header
+include::{snippets}/member-getList/request-headers.adoc[]
+
+[[resources_members_getList_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-getList/response-body.adoc[]
+===== Response Field
+include::{snippets}/member-getList/response-fields.adoc[]
+
+[[resources_members_getList_sample]]
+==== Sample
+===== Request
+include::{snippets}/member-getList/curl-request.adoc[]
+===== Response
+include::{snippets}/member-getList/http-response.adoc[]
+
+// ------------------------------------------------------------------------------------------------
+[[resources_members_profileImage]]
 === Profile Image
 회원 프로필 이미지 조회에 사용될 api
 
-[[resources_members_profileimage_request]]
+[[resources_members_profileImage_request]]
 ==== Request
 ===== Request HTTP Messages
-include::{snippets}/member-profileimage/http-request.adoc[]
+include::{snippets}/member-profileImage/http-request.adoc[]
 
 ===== Request Header
-include::{snippets}/member-profileimage/request-headers.adoc[]
+include::{snippets}/member-profileImage/request-headers.adoc[]
 
-[[resources_members_profileimage_response]]
+[[resources_members_profileImage_response]]
 ==== Response
 ===== Response Body
-include::{snippets}/member-profileimage/response-body.adoc[]
+include::{snippets}/member-profileImage/response-body.adoc[]
 
-[[resources_members_profileimage_sample]]
+[[resources_members_profileImage_sample]]
 ==== Sample
-===== Reqeust
-include::{snippets}/member-profileimage/curl-request.adoc[]
+===== Request
+include::{snippets}/member-profileImage/curl-request.adoc[]
 ===== Response
-include::{snippets}/member-profileimage/http-response.adoc[]
+include::{snippets}/member-profileImage/http-response.adoc[]

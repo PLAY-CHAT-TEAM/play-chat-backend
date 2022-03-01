@@ -78,11 +78,10 @@ class AuthControllerTest {
                     .accept(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(signInRequestDto))
             )
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("token").exists())
             .andDo(
-                document("auth-signin",
+                document("auth-signIn",
                     preprocessRequest(
                         prettyPrint()
                     ),

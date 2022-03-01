@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -12,11 +13,10 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWit
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,6 +36,7 @@ import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
+import me.kycho.playchat.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,6 +79,9 @@ class MemberControllerTest {
     MemberRepository memberRepository;
 
     @Autowired
+    MemberService memberService;
+
+    @Autowired
     JwtTokenProvider tokenProvider;
 
     @Autowired
@@ -117,12 +121,11 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("email").value(email))
             .andExpect(jsonPath("nickname").value(nickname))
             .andDo(
-                document("member-signup",
+                document("member-signUp",
                     preprocessRequest(
                         new PartContentModifyingPreprocessor()
                     ),
@@ -170,7 +173,6 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("email").value(email))
             .andExpect(jsonPath("nickname").value(nickname));
@@ -203,10 +205,9 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isConflict())
             .andExpect(jsonPath("status").value(HttpStatus.CONFLICT.value()))
-            .andExpect(jsonPath("message").value("Duplicated Email."))
+            .andExpect(jsonPath("message").value("이미 등록된 이메일입니다."))
         ;
     }
 
@@ -224,7 +225,6 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
             .andExpect(jsonPath("message").value("Binding Error."))
@@ -233,7 +233,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongEmail))
 //            TODO : docs
 //            .andDo(
-//                document("member-signup-error")
+//                document("member-signUp-error")
 //            )
         ;
     }
@@ -252,7 +252,6 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
             .andExpect(jsonPath("message").value("Binding Error."))
@@ -276,7 +275,6 @@ class MemberControllerTest {
                     .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
             .andExpect(jsonPath("message").value("Binding Error."))
@@ -284,6 +282,184 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
         ;
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 정상")
+    void getMyInfoTest() throws Exception {
+
+        // given
+        String email = "kycho@naver.com";
+        String nickname = "kycho";
+        String imageUrl = "kycho_image_url";
+        long id = createMember(email, nickname, imageUrl);
+        createMembers(5);
+
+        String token = generateToken(email);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/me")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("id").value(id))
+            .andExpect(jsonPath("email").value(email))
+            .andExpect(jsonPath("nickname").value(nickname))
+            .andExpect(jsonPath("imageUrl").value(imageUrl))
+            .andExpect(jsonPath("password").doesNotExist())
+            .andDo(
+                document("member-me",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("id").description("내 ID번호"),
+                        fieldWithPath("email").description("내 이메일 정보"),
+                        fieldWithPath("nickname").description("내 닉네임 정보"),
+                        fieldWithPath("imageUrl").description("내 프로필 이미지 URL")
+                    )
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("id로 회원 조회 정상")
+    void getMemberTest() throws Exception {
+        // given
+        List<Long> ids = createMembers(10);
+        Long targetId = ids.get(3);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("id").value(targetId))
+            .andExpect(jsonPath("email").value("member" + targetId + "@email.com"))
+            .andExpect(jsonPath("nickname").value("member" + targetId))
+            .andExpect(jsonPath("imageUrl").exists())
+            .andExpect(jsonPath("password").doesNotExist())
+            .andDo(
+                document("member-get",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    pathParameters(
+                        parameterWithName("memberId").description("조회하려는 회원의 ID번호")
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("id").description("조회된 회원의 ID번호"),
+                        fieldWithPath("email").description("조회된 회원의 이메일 정보"),
+                        fieldWithPath("nickname").description("조회된 회원의 닉네임 정보"),
+                        fieldWithPath("imageUrl").description("조회된 회원의 프로필 이미지 URL")
+                    )
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("id로 회원 조회 ERROR (인증된 토큰없이 요청)")
+    void getMemberErrorTest_withoutAuth() throws Exception {
+        // given
+        List<Long> ids = createMembers(10);
+        Long targetId = ids.get(3);
+
+        // when & then
+        mockMvc.perform(get("/api/members/{memberId}", targetId))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("id로 회원 조회 ERROR (존재하지 않는 회원)")
+    void getMemberErrorTest_notFound() throws Exception {
+        // given
+        List<Long> ids = createMembers(10);
+        Collections.sort(ids);
+        Long targetId = ids.get(ids.size() - 1) + 3;
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("status").value(HttpStatus.NOT_FOUND.value()))
+            .andExpect(jsonPath("message").value("해당 회원을 찾을 수 없습니다."))
+        ;
+    }
+
+    @Test
+    @DisplayName("id로 회원 조회 ERROR (잘못된 인풋값)")
+    void getMemberErrorTest_wrongInput() throws Exception {
+        // given
+        String targetId = "wrongInput";
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("잘못된 요청입니다."));
+        ;
+    }
+
+    @Test
+    @DisplayName("회원 전체 조회 정상")
+    void getMemberListTest() throws Exception {
+        // given
+        int memberNum = 3;
+        createMembers(memberNum);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/list")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(memberNum))
+            .andExpect(jsonPath("$[0].id").exists())
+            .andExpect(jsonPath("$[0].email").exists())
+            .andExpect(jsonPath("$[0].nickname").exists())
+            .andExpect(jsonPath("$[0].imageUrl").exists())
+            .andExpect(jsonPath("$[0].password").doesNotExist())
+            .andDo(
+                document("member-getList",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("[].id").description("조회된 회원의 ID번호"),
+                        fieldWithPath("[].email").description("조회된 회원의 이메일 정보"),
+                        fieldWithPath("[].nickname").description("조회된 회원의 닉네임 정보"),
+                        fieldWithPath("[].imageUrl").description("조회된 회원의 프로필 이미지 URL")
+                    )
+                )
+            )
+        ;
+    }
+
+    @Test
+    @DisplayName("회원 전체 조회 ERROR (인증 토큰 없이 요청)")
+    void getMemberListErrorTest_withoutAuth() throws Exception {
+        // given
+        createMembers(10);
+
+        // when & then
+        mockMvc.perform(get("/api/members/list"))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -307,7 +483,7 @@ class MemberControllerTest {
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
             .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
             .andDo(
-                document("member-profileimage",
+                document("member-profileImage",
                     preprocessRequest(
                         new AuthHeaderModifyingPreprocessor()
                     ),
@@ -326,8 +502,27 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("프로필 이미지 조회 ERROR (인증 토근 없이 요청)")
+    void downloadImageErrorTest_withoutAuth() throws Exception {
+
+        // given
+        String filename = "profileImage.png";
+        File file = new File("./src/test/resources/static/imageForTest.png");
+        File uploadedFile = new File(uploadFileDir + filename);
+        Files.copy(file.toPath(), uploadedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        given(fileStore.getFullPath(filename)).willReturn(uploadFileDir + filename);
+
+        // when & then
+        mockMvc.perform(get("/api/members/profile-image/" + filename))
+            .andExpect(status().isUnauthorized());
+
+        uploadedFile.delete();
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 ERROR(존재하지 않는 이미지)")
-    void downloadImageTest_notFound() throws Exception {
+    void downloadImageErrorTest_notFound() throws Exception {
 
         // when & then
         mockMvc.perform(
@@ -337,9 +532,37 @@ class MemberControllerTest {
             .andExpect(status().isNotFound());
     }
 
-    private String generateToken() {
+    private long createMember(String email, String nickname, String imageUrl) {
+        Member member = Member.builder()
+            .email(email)
+            .password("aaaaaaa1!")
+            .nickname(nickname)
+            .imageUrl(imageUrl)
+            .build();
+        Member signedUpMember = memberService.signUp(member);
+        return signedUpMember.getId();
+    }
 
-        String email = "test@naver.com";
+    private List<Long> createMembers(int memberNum) {
+        List<Long> ids = new ArrayList<>();
+        for (int i = 1; i <= memberNum; i++) {
+            Member member = Member.builder()
+                .email("member" + i + "@email.com")
+                .password("aaaaaaa1!")
+                .nickname("member" + i)
+                .imageUrl("image_url")
+                .build();
+            Member signedUpMember = memberService.signUp(member);
+            ids.add(signedUpMember.getId());
+        }
+        return ids;
+    }
+
+    private String generateToken() {
+        return generateToken("test@naver.com");
+    }
+
+    private String generateToken(String email) {
         List<GrantedAuthority> authorities = Collections
             .singletonList(new SimpleGrantedAuthority("ROLE_MEMBER"));
 
