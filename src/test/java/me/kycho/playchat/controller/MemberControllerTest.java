@@ -211,7 +211,7 @@ class MemberControllerTest {
             .andDo(print())
             .andExpect(status().isConflict())
             .andExpect(jsonPath("status").value(HttpStatus.CONFLICT.value()))
-            .andExpect(jsonPath("message").value("Duplicated Email."))
+            .andExpect(jsonPath("message").value("이미 등록된 이메일입니다."))
         ;
     }
 
