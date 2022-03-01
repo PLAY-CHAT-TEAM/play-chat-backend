@@ -48,6 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers("/api/members/sign-up").permitAll()
             .antMatchers("/api/auth/sign-in").permitAll()
+            .antMatchers("/api/members/profile-image/**").permitAll()  // TODO: remove
             .anyRequest().authenticated()
             .and()
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider),

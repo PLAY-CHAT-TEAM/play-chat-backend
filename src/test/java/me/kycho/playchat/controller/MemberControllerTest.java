@@ -14,13 +14,19 @@ import static org.springframework.restdocs.request.RequestDocumentation.paramete
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import me.kycho.playchat.common.FileStore;
@@ -70,6 +76,9 @@ class MemberControllerTest {
 
     @Value("${backend.url}")
     String backendUrl;
+
+    @Value("${file.dir}")
+    String uploadFileDir;
 
     @Test
     @DisplayName("회원가입 테스트 정상")
@@ -240,7 +249,6 @@ class MemberControllerTest {
         ;
     }
 
-
     @DisplayName("회원가입 테스트 ERROR(잘못된 닉네임)")
     @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
     @NullAndEmptySource
@@ -263,6 +271,27 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
         ;
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 조회 정상")
+    void downloadImageTest() throws Exception {
+        // given
+        String filename = "profileImage.png";
+        File file = new File("./src/test/resources/static/imageForTest.png");
+        File uploadedFile = new File(uploadFileDir + filename);
+        Files.copy(file.toPath(), uploadedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        given(fileStore.getFullPath(filename)).willReturn(uploadFileDir + filename);
+
+        // when & then
+        mockMvc.perform(get("/api/members/profile-image/" + filename))
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
+            .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
+        ;
+
+        uploadedFile.delete();
     }
 
     static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
