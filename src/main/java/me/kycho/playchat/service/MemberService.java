@@ -27,6 +27,10 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
+    public Optional<Member> getMember(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
+
     private void validateDuplicateMember(Member member) {
         Optional<Member> findMember = memberRepository.findByEmail(member.getEmail());
         if (findMember.isPresent()) {

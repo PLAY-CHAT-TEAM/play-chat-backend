@@ -36,6 +36,7 @@ import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
+import me.kycho.playchat.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -76,6 +77,9 @@ class MemberControllerTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    MemberService memberService;
 
     @Autowired
     JwtTokenProvider tokenProvider;
@@ -287,6 +291,28 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("id로 회원 조회 정상")
+    void getMemberTest() throws Exception {
+        // given
+        Long targetId = 3L;
+        createMembers(10);
+
+        // when & then
+        mockMvc.perform(
+            get("/api/members/" + targetId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+        )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("id").value(targetId))
+            .andExpect(jsonPath("email").value("member" + targetId + "@email.com"))
+            .andExpect(jsonPath("nickname").value("member" + targetId))
+            .andExpect(jsonPath("imageUrl").exists())
+            .andExpect(jsonPath("password").doesNotExist())
+        ;
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
@@ -335,6 +361,18 @@ class MemberControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
             )
             .andExpect(status().isNotFound());
+    }
+
+    private void createMembers(int memberNum) {
+        for (int i = 1; i <= memberNum; i++) {
+            Member member = Member.builder()
+                .email("member" + i + "@email.com")
+                .password("aaaaaaa1!")
+                .nickname("member" + i)
+                .imageUrl("image_url")
+                .build();
+            memberService.signUp(member);
+        }
     }
 
     private String generateToken() {

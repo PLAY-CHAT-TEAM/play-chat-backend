@@ -1,8 +1,10 @@
 package me.kycho.playchat.controller;
 
 import java.io.IOException;
+import java.util.Optional;
 import javax.validation.Valid;
 import me.kycho.playchat.common.FileStore;
+import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
 import me.kycho.playchat.domain.Member;
@@ -57,6 +59,17 @@ public class MemberController {
         Member signedUpMember = memberService.signUp(signUpRequestDto.toMemberEntity());
         SignUpResponseDto response = SignUpResponseDto.from(signedUpMember);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{memberId}")
+    public ResponseEntity<MemberResponseDto> getMember(@PathVariable Long memberId) {
+        Optional<Member> member = memberService.getMember(memberId);
+
+        if (member.isPresent()) {
+            return ResponseEntity.ok().body(MemberResponseDto.from(member.get()));
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/profile-image/{filename}")
