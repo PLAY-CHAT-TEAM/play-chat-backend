@@ -331,6 +331,18 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("id로 회원 조회 ERROR (인증된 토큰없이 요청)")
+    void getMemberErrorTest_withoutAuth() throws Exception {
+        // given
+        Long targetId = 3L;
+        createMembers(10);
+
+        // when & then
+        mockMvc.perform(get("/api/members/{memberId}", targetId))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("id로 회원 조회 ERROR (존재하지 않는 회원)")
     void getMemberErrorTest_notFound() throws Exception {
         // given
@@ -402,6 +414,25 @@ class MemberControllerTest {
                     )
                 )
             );
+
+        uploadedFile.delete();
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 조회 ERROR (인증 토근 없이 요청)")
+    void downloadImageErrorTest_withoutAuth() throws Exception {
+
+        // given
+        String filename = "profileImage.png";
+        File file = new File("./src/test/resources/static/imageForTest.png");
+        File uploadedFile = new File(uploadFileDir + filename);
+        Files.copy(file.toPath(), uploadedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        given(fileStore.getFullPath(filename)).willReturn(uploadFileDir + filename);
+
+        // when & then
+        mockMvc.perform(get("/api/members/profile-image/" + filename))
+            .andExpect(status().isUnauthorized());
 
         uploadedFile.delete();
     }
