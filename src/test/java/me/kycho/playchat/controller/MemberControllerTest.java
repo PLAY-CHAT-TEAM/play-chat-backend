@@ -308,7 +308,22 @@ class MemberControllerTest {
             .andExpect(jsonPath("nickname").value(nickname))
             .andExpect(jsonPath("imageUrl").value(imageUrl))
             .andExpect(jsonPath("password").doesNotExist())
-        ;
+            .andDo(
+                document("member-me",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("id").description("내 ID번호"),
+                        fieldWithPath("email").description("내 이메일 정보"),
+                        fieldWithPath("nickname").description("내 닉네임 정보"),
+                        fieldWithPath("imageUrl").description("내 프로필 이미지 URL")
+                    )
+                )
+            );
     }
 
     @Test
