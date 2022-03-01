@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.security.CustomAuthenticationEntryPoint;
 import me.kycho.playchat.security.jwt.JwtAuthenticationFilter;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -31,7 +30,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         web.
             ignoring()
             .antMatchers("/docs/index.html")
-            .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
         ;
     }
 

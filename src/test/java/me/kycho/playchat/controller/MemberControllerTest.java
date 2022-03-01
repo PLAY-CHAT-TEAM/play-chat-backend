@@ -14,18 +14,28 @@ import static org.springframework.restdocs.request.RequestDocumentation.paramete
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
+import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,7 +55,12 @@ import org.springframework.restdocs.operation.OperationRequest;
 import org.springframework.restdocs.operation.OperationRequestFactory;
 import org.springframework.restdocs.operation.OperationRequestPart;
 import org.springframework.restdocs.operation.OperationRequestPartFactory;
+import org.springframework.restdocs.operation.preprocess.ContentModifyingOperationPreprocessor;
 import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +78,9 @@ class MemberControllerTest {
     MemberRepository memberRepository;
 
     @Autowired
+    JwtTokenProvider tokenProvider;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @MockBean
@@ -70,6 +88,9 @@ class MemberControllerTest {
 
     @Value("${backend.url}")
     String backendUrl;
+
+    @Value("${file.dir}")
+    String uploadFileDir;
 
     @Test
     @DisplayName("회원가입 테스트 정상")
@@ -155,7 +176,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("nickname").value(nickname));
 
         Member signedUpMember = memberRepository.findByEmail(email).get();
-        assertThat(signedUpMember.getImageUrl()).isEqualTo(backendUrl + "/images/default-profile.png");
+        assertThat(signedUpMember.getImageUrl()).isEqualTo(
+            backendUrl + "/images/default-profile.png");
     }
 
     @Test
@@ -240,7 +262,6 @@ class MemberControllerTest {
         ;
     }
 
-
     @DisplayName("회원가입 테스트 ERROR(잘못된 닉네임)")
     @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
     @NullAndEmptySource
@@ -265,6 +286,69 @@ class MemberControllerTest {
         ;
     }
 
+    @Test
+    @DisplayName("프로필 이미지 조회 정상")
+    void downloadImageTest() throws Exception {
+
+        // given
+        String filename = "profileImage.png";
+        File file = new File("./src/test/resources/static/imageForTest.png");
+        File uploadedFile = new File(uploadFileDir + filename);
+        Files.copy(file.toPath(), uploadedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        given(fileStore.getFullPath(filename)).willReturn(uploadFileDir + filename);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/profile-image/" + filename)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
+            .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
+            .andDo(
+                document("member-profileimage",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor((originalContent, contentType) ->
+                            "<< Image binary data >>".getBytes(StandardCharsets.UTF_8))
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    )
+                )
+            );
+
+        uploadedFile.delete();
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 조회 ERROR(존재하지 않는 이미지)")
+    void downloadImageTest_notFound() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/profile-image/noFile.png")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isNotFound());
+    }
+
+    private String generateToken() {
+
+        String email = "test@naver.com";
+        List<GrantedAuthority> authorities = Collections
+            .singletonList(new SimpleGrantedAuthority("ROLE_MEMBER"));
+
+        Authentication authentication =
+            new UsernamePasswordAuthenticationToken(email, "", authorities);
+
+        return tokenProvider.createToken(authentication);
+    }
+
     static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
 
         private final OperationRequestPartFactory partFactory = new OperationRequestPartFactory();
@@ -279,6 +363,26 @@ class MemberControllerTest {
             }
             return requestFactory.create(request.getUri(), request.getMethod(),
                 request.getContent(), request.getHeaders(), request.getParameters(), parts);
+        }
+    }
+
+    static final class AuthHeaderModifyingPreprocessor extends OperationPreprocessorAdapter {
+
+        private final OperationRequestFactory requestFactory = new OperationRequestFactory();
+
+        @Override
+        public OperationRequest preprocess(OperationRequest request) {
+            HttpHeaders headers = new HttpHeaders();
+            for (String key : request.getHeaders().keySet()) {
+                if (key.equals(HttpHeaders.AUTHORIZATION)) {
+                    headers.put(key, Collections.singletonList("Bearer XXXXXXX.YYYYYYYYYY.ZZZZZZ"));
+                } else {
+                    headers.put(key, Objects.requireNonNull(request.getHeaders().get(key)));
+                }
+            }
+
+            return requestFactory.create(request.getUri(), request.getMethod(),
+                request.getContent(), headers, request.getParameters(), request.getParts());
         }
     }
 }

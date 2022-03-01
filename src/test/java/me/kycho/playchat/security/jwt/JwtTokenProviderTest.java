@@ -19,7 +19,7 @@ class JwtTokenProviderTest {
     void createTokenTest_And_getAuthenticationTest() {
         // given
         String email = "kycho@naver.com";
-        List<GrantedAuthority> authorities = Stream.of("MEMBER", "ADMIN")
+        List<GrantedAuthority> authorities = Stream.of("ROLE_MEMBER", "ROLE_ADMIN")
             .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
         Authentication authentication =
@@ -43,7 +43,7 @@ class JwtTokenProviderTest {
     void validateTokenTest() {
         // given
         String email = "kycho@naver.com";
-        List<GrantedAuthority> authorities = Stream.of("MEMBER", "ADMIN")
+        List<GrantedAuthority> authorities = Stream.of("ROLE_MEMBER", "ROLE_ADMIN")
             .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
         Authentication authentication =
