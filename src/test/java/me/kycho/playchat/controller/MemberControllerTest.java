@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Objects;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
-import me.kycho.playchat.exception.MemberNotFoundException;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import me.kycho.playchat.service.MemberService;
@@ -347,6 +346,24 @@ class MemberControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("status").value(HttpStatus.NOT_FOUND.value()))
             .andExpect(jsonPath("message").value("해당 회원을 찾을 수 없습니다."))
+        ;
+    }
+
+    @Test
+    @DisplayName("id로 회원 조회 ERROR (잘못된 인풋값)")
+    void getMemberErrorTest_wrongInput() throws Exception {
+        // given
+        String targetId = "wrongInput";
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("잘못된 요청입니다."));
         ;
     }
 
