@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -12,9 +13,9 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWit
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -299,17 +300,34 @@ class MemberControllerTest {
 
         // when & then
         mockMvc.perform(
-            get("/api/members/" + targetId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
-        )
-            .andDo(print())
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
             .andExpect(status().isOk())
             .andExpect(jsonPath("id").value(targetId))
             .andExpect(jsonPath("email").value("member" + targetId + "@email.com"))
             .andExpect(jsonPath("nickname").value("member" + targetId))
             .andExpect(jsonPath("imageUrl").exists())
             .andExpect(jsonPath("password").doesNotExist())
-        ;
+            .andDo(
+                document("member-get",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint()),
+                    pathParameters(
+                        parameterWithName("memberId").description("조회하려는 회원의 ID번호")
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    ),
+                    responseFields(
+                        fieldWithPath("id").description("조회된 회원의 ID번호"),
+                        fieldWithPath("email").description("조회된 회원의 이메일 정보"),
+                        fieldWithPath("nickname").description("조회된 회원의 닉네임 정보"),
+                        fieldWithPath("imageUrl").description("조회된 회원의 프로필 이미지 URL")
+                    )
+                )
+            );
     }
 
     @Test
