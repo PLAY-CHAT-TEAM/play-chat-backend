@@ -330,8 +330,8 @@ class MemberControllerTest {
     @DisplayName("id로 회원 조회 정상")
     void getMemberTest() throws Exception {
         // given
-        Long targetId = 3L;
-        createMembers(10);
+        List<Long> ids = createMembers(10);
+        Long targetId = ids.get(3);
 
         // when & then
         mockMvc.perform(
@@ -369,8 +369,8 @@ class MemberControllerTest {
     @DisplayName("id로 회원 조회 ERROR (인증된 토큰없이 요청)")
     void getMemberErrorTest_withoutAuth() throws Exception {
         // given
-        Long targetId = 3L;
-        createMembers(10);
+        List<Long> ids = createMembers(10);
+        Long targetId = ids.get(3);
 
         // when & then
         mockMvc.perform(get("/api/members/{memberId}", targetId))
@@ -381,8 +381,9 @@ class MemberControllerTest {
     @DisplayName("id로 회원 조회 ERROR (존재하지 않는 회원)")
     void getMemberErrorTest_notFound() throws Exception {
         // given
-        Long targetId = 11L;
-        createMembers(10);
+        List<Long> ids = createMembers(10);
+        Collections.sort(ids);
+        Long targetId = ids.get(ids.size() - 1) + 3;
 
         // when & then
         mockMvc.perform(
@@ -542,7 +543,8 @@ class MemberControllerTest {
         return signedUpMember.getId();
     }
 
-    private void createMembers(int memberNum) {
+    private List<Long> createMembers(int memberNum) {
+        List<Long> ids = new ArrayList<>();
         for (int i = 1; i <= memberNum; i++) {
             Member member = Member.builder()
                 .email("member" + i + "@email.com")
@@ -550,8 +552,10 @@ class MemberControllerTest {
                 .nickname("member" + i)
                 .imageUrl("image_url")
                 .build();
-            memberService.signUp(member);
+            Member signedUpMember = memberService.signUp(member);
+            ids.add(signedUpMember.getId());
         }
+        return ids;
     }
 
     private String generateToken() {
