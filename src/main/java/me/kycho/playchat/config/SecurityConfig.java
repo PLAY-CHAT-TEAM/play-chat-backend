@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.security.CustomAuthenticationEntryPoint;
 import me.kycho.playchat.security.jwt.JwtAuthenticationFilter;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -31,7 +30,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         web.
             ignoring()
             .antMatchers("/docs/index.html")
-            .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
         ;
     }
 
@@ -48,7 +46,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers("/api/members/sign-up").permitAll()
             .antMatchers("/api/auth/sign-in").permitAll()
-            .antMatchers("/api/members/profile-image/**").permitAll()  // TODO: remove
             .anyRequest().authenticated()
             .and()
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider),

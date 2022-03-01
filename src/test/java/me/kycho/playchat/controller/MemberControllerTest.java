@@ -28,10 +28,12 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
+import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,6 +54,10 @@ import org.springframework.restdocs.operation.OperationRequestFactory;
 import org.springframework.restdocs.operation.OperationRequestPart;
 import org.springframework.restdocs.operation.OperationRequestPartFactory;
 import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +73,9 @@ class MemberControllerTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    JwtTokenProvider tokenProvider;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -164,7 +173,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("nickname").value(nickname));
 
         Member signedUpMember = memberRepository.findByEmail(email).get();
-        assertThat(signedUpMember.getImageUrl()).isEqualTo(backendUrl + "/images/default-profile.png");
+        assertThat(signedUpMember.getImageUrl()).isEqualTo(
+            backendUrl + "/images/default-profile.png");
     }
 
     @Test
@@ -276,6 +286,7 @@ class MemberControllerTest {
     @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
+
         // given
         String filename = "profileImage.png";
         File file = new File("./src/test/resources/static/imageForTest.png");
@@ -285,7 +296,10 @@ class MemberControllerTest {
         given(fileStore.getFullPath(filename)).willReturn(uploadFileDir + filename);
 
         // when & then
-        mockMvc.perform(get("/api/members/profile-image/" + filename))
+        mockMvc.perform(
+                get("/api/members/profile-image/" + filename)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
             .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
@@ -299,8 +313,23 @@ class MemberControllerTest {
     void downloadImageTest_notFound() throws Exception {
 
         // when & then
-        mockMvc.perform(get("/api/members/profile-image/noFile.png"))
+        mockMvc.perform(
+                get("/api/members/profile-image/noFile.png")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
             .andExpect(status().isNotFound());
+    }
+
+    private String generateToken() {
+
+        String email = "test@naver.com";
+        List<GrantedAuthority> authorities = Collections
+            .singletonList(new SimpleGrantedAuthority("ROLE_MEMBER"));
+
+        Authentication authentication =
+            new UsernamePasswordAuthenticationToken(email, "", authorities);
+
+        return tokenProvider.createToken(authentication);
     }
 
     static final class PartContentModifyingPreprocessor extends OperationPreprocessorAdapter {
