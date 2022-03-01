@@ -1,6 +1,8 @@
 package me.kycho.playchat.controller;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.controller.dto.MemberResponseDto;
@@ -64,6 +66,16 @@ public class MemberController {
     public ResponseEntity<MemberResponseDto> getMember(@PathVariable Long memberId) {
         Member member = memberService.getMember(memberId);
         return ResponseEntity.ok().body(MemberResponseDto.from(member));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<MemberResponseDto>> getMemberList() {
+        List<Member> members = memberService.getMemberAll();
+
+        List<MemberResponseDto> collect = members.stream().map(MemberResponseDto::from)
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok().body(collect);
     }
 
     @GetMapping("/profile-image/{filename}")

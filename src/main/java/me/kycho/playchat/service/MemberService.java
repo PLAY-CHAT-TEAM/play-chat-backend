@@ -1,5 +1,6 @@
 package me.kycho.playchat.service;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.domain.Member;
@@ -31,6 +32,10 @@ public class MemberService {
     public Member getMember(Long memberId) {
         return memberRepository.findById(memberId)
             .orElseThrow(MemberNotFoundException::new);
+    }
+
+    public List<Member> getMemberAll() {
+        return memberRepository.findAll();
     }
 
     private void validateDuplicateMember(Member member) {

@@ -372,6 +372,41 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("회원 전체 조회 정상")
+    void getMemberListTest() throws Exception {
+        // given
+        int memberNum = 15;
+        createMembers(memberNum);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/list")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(memberNum))
+            .andExpect(jsonPath("$[0].id").exists())
+            .andExpect(jsonPath("$[0].email").exists())
+            .andExpect(jsonPath("$[0].nickname").exists())
+            .andExpect(jsonPath("$[0].imageUrl").exists())
+            .andExpect(jsonPath("$[0].password").doesNotExist())
+        ;
+    }
+
+    @Test
+    @DisplayName("회원 전체 조회 ERROR (인증 토큰 없이 요청)")
+    void getMemberListErrorTest_withoutAuth() throws Exception {
+        // given
+        createMembers(10);
+
+        // when & then
+        mockMvc.perform(get("/api/members/list"))
+            .andExpect(status().isUnauthorized());
+    }
+
+
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
