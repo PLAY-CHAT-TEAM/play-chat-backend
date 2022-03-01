@@ -81,7 +81,7 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("token").exists())
             .andDo(
-                document("auth-signin",
+                document("auth-signIn",
                     preprocessRequest(
                         prettyPrint()
                     ),

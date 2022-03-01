@@ -125,7 +125,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("email").value(email))
             .andExpect(jsonPath("nickname").value(nickname))
             .andDo(
-                document("member-signup",
+                document("member-signUp",
                     preprocessRequest(
                         new PartContentModifyingPreprocessor()
                     ),
@@ -233,7 +233,7 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongEmail))
 //            TODO : docs
 //            .andDo(
-//                document("member-signup-error")
+//                document("member-signUp-error")
 //            )
         ;
     }
@@ -440,7 +440,7 @@ class MemberControllerTest {
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
             .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
             .andDo(
-                document("member-profileimage",
+                document("member-profileImage",
                     preprocessRequest(
                         new AuthHeaderModifyingPreprocessor()
                     ),
