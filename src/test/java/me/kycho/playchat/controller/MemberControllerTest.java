@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Objects;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
+import me.kycho.playchat.exception.MemberNotFoundException;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import me.kycho.playchat.service.MemberService;
@@ -331,6 +332,25 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("id로 회원 조회 ERROR (존재하지 않는 회원)")
+    void getMemberErrorTest_notFound() throws Exception {
+        // given
+        Long targetId = 11L;
+        createMembers(10);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/{memberId}", targetId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+            )
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("status").value(HttpStatus.NOT_FOUND.value()))
+            .andExpect(jsonPath("message").value("해당 회원을 찾을 수 없습니다."))
+        ;
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
@@ -371,7 +391,7 @@ class MemberControllerTest {
 
     @Test
     @DisplayName("프로필 이미지 조회 ERROR(존재하지 않는 이미지)")
-    void downloadImageTest_notFound() throws Exception {
+    void downloadImageErrorTest_notFound() throws Exception {
 
         // when & then
         mockMvc.perform(

@@ -2,6 +2,7 @@ package me.kycho.playchat.exhandler;
 
 import java.util.List;
 import me.kycho.playchat.exception.DuplicatedEmailException;
+import me.kycho.playchat.exception.MemberNotFoundException;
 import me.kycho.playchat.exhandler.dto.ErrorDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
@@ -20,6 +21,12 @@ public class ExControllerAdvice {
         return new ErrorDto(HttpStatus.CONFLICT.value(), ex.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler
+    public ErrorDto memberNotFoundException(MemberNotFoundException ex) {
+        return new ErrorDto(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
     public ErrorDto methodArgumentNotValidException(BindException ex) {
@@ -30,7 +37,7 @@ public class ExControllerAdvice {
 
     private ErrorDto processFieldErrors(List<FieldError> fieldErrors) {
         ErrorDto errorDto = new ErrorDto(HttpStatus.BAD_REQUEST.value(), "Binding Error.");
-        for (FieldError fieldError: fieldErrors) {
+        for (FieldError fieldError : fieldErrors) {
             errorDto.addFieldError(fieldError);
         }
         return errorDto;
