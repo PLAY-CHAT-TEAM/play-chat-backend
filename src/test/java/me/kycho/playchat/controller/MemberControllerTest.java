@@ -25,11 +25,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
@@ -53,6 +55,7 @@ import org.springframework.restdocs.operation.OperationRequest;
 import org.springframework.restdocs.operation.OperationRequestFactory;
 import org.springframework.restdocs.operation.OperationRequestPart;
 import org.springframework.restdocs.operation.OperationRequestPartFactory;
+import org.springframework.restdocs.operation.preprocess.ContentModifyingOperationPreprocessor;
 import org.springframework.restdocs.operation.preprocess.OperationPreprocessorAdapter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -303,7 +306,21 @@ class MemberControllerTest {
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
             .andExpect(content().bytes(Files.readAllBytes(file.toPath())))
-        ;
+            .andDo(
+                document("member-profileimage",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor((originalContent, contentType) ->
+                            "<< Image binary data >>".getBytes(StandardCharsets.UTF_8))
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +" + "\n" + "Bearer <jwt토큰값>")
+                    )
+                )
+            );
 
         uploadedFile.delete();
     }
@@ -346,6 +363,26 @@ class MemberControllerTest {
             }
             return requestFactory.create(request.getUri(), request.getMethod(),
                 request.getContent(), request.getHeaders(), request.getParameters(), parts);
+        }
+    }
+
+    static final class AuthHeaderModifyingPreprocessor extends OperationPreprocessorAdapter {
+
+        private final OperationRequestFactory requestFactory = new OperationRequestFactory();
+
+        @Override
+        public OperationRequest preprocess(OperationRequest request) {
+            HttpHeaders headers = new HttpHeaders();
+            for (String key : request.getHeaders().keySet()) {
+                if (key.equals(HttpHeaders.AUTHORIZATION)) {
+                    headers.put(key, Collections.singletonList("Bearer XXXXXXX.YYYYYYYYYY.ZZZZZZ"));
+                } else {
+                    headers.put(key, Objects.requireNonNull(request.getHeaders().get(key)));
+                }
+            }
+
+            return requestFactory.create(request.getUri(), request.getMethod(),
+                request.getContent(), headers, request.getParameters(), request.getParts());
         }
     }
 }
