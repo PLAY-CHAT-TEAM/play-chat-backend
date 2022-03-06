@@ -54,3 +54,7 @@ bootJar {
         into 'BOOT-INF/classes/static/docs'
     }
 }
+
+jar {
+    enabled = false
+}
