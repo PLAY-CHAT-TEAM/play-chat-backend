@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/playchat
+    username: root
+    password: pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+    #show-sql: true
+
+logging.level:
+  org.hibernate.SQL: debug
+  #org.hibernate.type: trace
+
+file.dir: /Users/kycho/Desktop/upload/
+backend.url: http://localhost:8080
