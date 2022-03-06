@@ -17,7 +17,7 @@ logging.level:
   org.hibernate.SQL: debug
   #org.hibernate.type: trace
 
-file.dir: /Users/kycho/Desktop/upload/
+file.dir: ./src/test/resources/static/
 
 backend.url: http://localhost:8080
 
