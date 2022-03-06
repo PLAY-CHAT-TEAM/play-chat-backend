@@ -18,11 +18,9 @@ logging.level:
   #org.hibernate.type: trace
 
 file.dir: ./src/test/resources/static/
-
 backend.url: http://localhost:8080
 
 jwt:
-  header: Authorization
-  #echo 'secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecret'|base64
-  secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg==
+  #echo 'secret-for-test-secret-for-test-secret-for-test-secret-for-test-secret-for-test'|base64
+  secret: c2VjcmV0LWZvci10ZXN0LXNlY3JldC1mb3ItdGVzdC1zZWNyZXQtZm9yLXRlc3Qtc2VjcmV0LWZvci10ZXN0LXNlY3JldC1mb3ItdGVzdAo=
   token-validity-in-seconds: 5
