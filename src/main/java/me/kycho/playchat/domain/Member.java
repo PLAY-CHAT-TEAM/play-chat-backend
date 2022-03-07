@@ -40,4 +40,9 @@ public class Member {
     public void changePassword(String password) {
         this.password = password;
     }
+
+    public void updateProfile(Member value) {
+        this.nickname = value.getNickname();
+        this.imageUrl = value.getImageUrl();
+    }
 }

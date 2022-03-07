@@ -43,6 +43,13 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    public void updateProfile(Long targetId, Member updateMemberValue) {
+        Member targetMember = memberRepository.findById(targetId)
+            .orElseThrow(MemberNotFoundException::new);
+
+        targetMember.updateProfile(updateMemberValue);
+    }
+
     private void validateDuplicateMember(Member member) {
         Optional<Member> findMember = memberRepository.findByEmail(member.getEmail());
         if (findMember.isPresent()) {
