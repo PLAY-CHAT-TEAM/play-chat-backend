@@ -1,4 +1,4 @@
-package me.kycho.playchat.common;
+package me.kycho.playchat.utils;
 
 import java.io.File;
 import java.io.IOException;

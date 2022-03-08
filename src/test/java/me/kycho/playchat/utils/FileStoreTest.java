@@ -1,4 +1,4 @@
-package me.kycho.playchat.common;
+package me.kycho.playchat.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

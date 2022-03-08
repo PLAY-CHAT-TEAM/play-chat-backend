@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import me.kycho.playchat.common.FileStore;
+import me.kycho.playchat.utils.FileStore;
 import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
