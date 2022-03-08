@@ -43,7 +43,7 @@ public class ExControllerAdvice {
     }
 
     private ErrorDto processFieldErrors(List<FieldError> fieldErrors) {
-        ErrorDto errorDto = new ErrorDto(HttpStatus.BAD_REQUEST.value(), "Binding Error.");
+        ErrorDto errorDto = new ErrorDto(HttpStatus.BAD_REQUEST.value(), "입력 값이 잘못되었습니다.");
         for (FieldError fieldError : fieldErrors) {
             errorDto.addFieldError(fieldError);
         }
