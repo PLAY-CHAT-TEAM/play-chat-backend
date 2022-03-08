@@ -43,6 +43,7 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    @Transactional
     public void updateProfile(Long targetId, Member updateMemberValue) {
         Member targetMember = memberRepository.findById(targetId)
             .orElseThrow(MemberNotFoundException::new);

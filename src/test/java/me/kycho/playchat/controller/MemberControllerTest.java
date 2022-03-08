@@ -32,11 +32,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import me.kycho.playchat.utils.FileStore;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import me.kycho.playchat.service.MemberService;
+import me.kycho.playchat.utils.FileStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -64,6 +64,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -462,6 +463,57 @@ class MemberControllerTest {
         // when & then
         mockMvc.perform(get("/api/members/list"))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("회원 프로필 업데이트 정상")
+    void updateProfileTest() throws Exception {
+
+        // given
+        String email = "member@email.com";
+        String password = "password";
+        String nickname = "member";
+        String imageUrl = "http://localhost:8080/images/default-profile.png";
+
+        String updatedNickname = "updated_member";
+        String updatedImageUrl = "updated_image_url";
+
+        Member existingMember = Member.builder()
+            .email(email)
+            .password(password)
+            .nickname(nickname)
+            .imageUrl(imageUrl)
+            .build();
+
+        memberRepository.save(existingMember);
+
+        MockMultipartFile updateProfileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+        given(fileStore.storeFile(updateProfileImage)).willReturn(updatedImageUrl);
+
+        // when
+        ResultActions resultActions = mockMvc.perform(
+            multipart("/api/members/" + existingMember.getId() + "/update")
+                .file(updateProfileImage)
+                .param("nickname", updatedNickname)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                .accept(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        Member updatedMember = memberRepository.findById(existingMember.getId()).get();
+        assertThat(updatedMember.getEmail()).isEqualTo(email);
+        assertThat(updatedMember.getPassword()).isEqualTo(password);
+        assertThat(updatedMember.getNickname()).isEqualTo(updatedNickname);
+        assertThat(updatedMember.getImageUrl()).endsWith(updatedImageUrl);
+
+        resultActions
+            .andExpect(status().isNoContent())
+            .andDo(
+                document("member-updateProfile")
+            );
     }
 
     @DisplayName("회원 프로필 업데이트 ERROR (잘못된 닉네임)")

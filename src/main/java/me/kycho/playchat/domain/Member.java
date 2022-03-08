@@ -42,7 +42,11 @@ public class Member {
     }
 
     public void updateProfile(Member value) {
-        this.nickname = value.getNickname();
-        this.imageUrl = value.getImageUrl();
+        if (value.getNickname() != null) {
+            this.nickname = value.getNickname();
+        }
+        if (value.getImageUrl() != null) {
+            this.imageUrl = value.getImageUrl();
+        }
     }
 }

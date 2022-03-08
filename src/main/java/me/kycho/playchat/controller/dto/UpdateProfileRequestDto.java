@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import me.kycho.playchat.domain.Member;
 import org.springframework.web.multipart.MultipartFile;
 
 @Builder
@@ -20,4 +21,12 @@ public class UpdateProfileRequestDto {
 
     private MultipartFile profileImage;
 
+    private String profileImageUrl;
+
+    public Member toMemberEntity() {
+        return Member.builder()
+            .nickname(nickname)
+            .imageUrl(profileImageUrl)
+            .build();
+    }
 }
