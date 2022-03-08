@@ -96,7 +96,7 @@ public class MemberController {
 
         Member currentMember = memberService.getMemberByEmail(currentUser.getUsername());
         if (!currentMember.getId().equals(memberId)) {
-            throw new AccessDeniedException("접근 권한이 없습니다.");
+            throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
         MultipartFile profileImage = updateProfileRequestDto.getProfileImage();

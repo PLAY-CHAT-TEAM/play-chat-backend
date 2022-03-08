@@ -17,6 +17,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -513,6 +514,47 @@ class MemberControllerTest {
             .andExpect(status().isNoContent())
             .andDo(
                 document("member-updateProfile")
+            );
+    }
+
+    @Test
+    @DisplayName("회원 프로필 업데이트 ERROR (권한 없는 경우)")
+    void updateProfileTest_accessDenied() throws Exception {
+
+        // given
+        String member1Email = "member1@email.com";
+
+        Member member1 = Member.builder()
+            .email(member1Email)
+            .password("password")
+            .nickname("member1")
+            .imageUrl("imageUrl")
+            .build();
+
+        Member member2 = Member.builder()
+            .email("member2@email.com")
+            .password("password")
+            .nickname("member2")
+            .imageUrl("imageUrl")
+            .build();
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // when & then
+        mockMvc.perform(
+            multipart("/api/members/" + member2.getId() + "/update")
+                .param("nickname", "updatedNickname")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member1Email))
+                .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
+            .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            .andDo(
+                document("member-updateProfile-accessDenied")
             );
     }
 

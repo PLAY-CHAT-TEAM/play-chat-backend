@@ -7,6 +7,7 @@ import me.kycho.playchat.exception.MemberNotFoundException;
 import me.kycho.playchat.exhandler.dto.ErrorDto;
 import me.kycho.playchat.validator.UpdateProfileRequestValidator;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -26,6 +27,12 @@ public class ExControllerAdvice {
     @InitBinder("updateProfileRequestDto")
     public void init(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(updateProfileRequestValidator);
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler
+    public ErrorDto accessDeniedEx(AccessDeniedException ex) {
+        return new ErrorDto(HttpStatus.FORBIDDEN.value(), ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
