@@ -8,6 +8,7 @@ import me.kycho.playchat.common.FileStore;
 import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
+import me.kycho.playchat.controller.dto.UpdateProfileRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.service.MemberService;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,6 +86,13 @@ public class MemberController {
             .collect(Collectors.toList());
 
         return ResponseEntity.ok().body(collect);
+    }
+
+    @PostMapping("/{memberId}/update")
+    public void updateProfile(
+        @AuthenticationPrincipal User currentUser, @PathVariable Long memberId,
+        @Valid @ModelAttribute UpdateProfileRequestDto updateProfileRequestDto) throws IOException {
+
     }
 
     @GetMapping("/profile-image/{filename}")

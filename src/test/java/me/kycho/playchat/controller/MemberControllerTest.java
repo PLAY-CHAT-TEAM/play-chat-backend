@@ -17,6 +17,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -462,6 +463,39 @@ class MemberControllerTest {
         // when & then
         mockMvc.perform(get("/api/members/list"))
             .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("회원가입 프로필 업데이트 ERROR(잘못된 닉네임)")
+    @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
+    @ValueSource(strings = {"", "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
+    void updateProfileTest_wrongNickname(String wrongNickname) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/1/update")
+                    .file(profileImage)
+                    .param("nickname", wrongNickname)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("nickname"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").value("닉네임은 최대 50자까지 가능합니다."))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
+            .andDo(
+                document("member-updateProfile-wrongNicnkane")
+            );
     }
 
     @Test
