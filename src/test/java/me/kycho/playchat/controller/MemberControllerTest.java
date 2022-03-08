@@ -17,7 +17,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -465,7 +464,7 @@ class MemberControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
-    @DisplayName("회원가입 프로필 업데이트 ERROR(잘못된 닉네임)")
+    @DisplayName("회원 프로필 업데이트 ERROR (잘못된 닉네임)")
     @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
     @ValueSource(strings = {"", "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
     void updateProfileTest_wrongNickname(String wrongNickname) throws Exception {
@@ -483,10 +482,8 @@ class MemberControllerTest {
                     .file(profileImage)
                     .param("nickname", wrongNickname)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
-                    .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
             .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
@@ -495,6 +492,24 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
             .andDo(
                 document("member-updateProfile-wrongNicnkane")
+            );
+    }
+
+    @Test
+    @DisplayName("회원 프로필 업데이트 ERROR (업데이트 정보 없음)")
+    void updateProfileTest_noUpdateData() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/1/update")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("수정할 회원정보가 없습니다."))
+            .andDo(
+                document("member-updateProfile-noUpdateData")
             );
     }
 
