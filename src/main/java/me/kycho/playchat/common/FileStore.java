@@ -31,6 +31,11 @@ public class FileStore {
         return storeFileName;
     }
 
+    public boolean deleteFile(String filename) {
+        File file = new File(fileDir + filename);
+        return file.delete();
+    }
+
     public String getFullPath(String filename) {
         return fileDir + filename;
     }
