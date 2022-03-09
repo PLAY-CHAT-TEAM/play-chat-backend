@@ -12,6 +12,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
@@ -535,7 +536,7 @@ class MemberControllerTest {
                         headerWithName(HttpHeaders.ACCEPT)
                             .description("응답 받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
                         headerWithName(HttpHeaders.AUTHORIZATION)
-                            .description("인증 정보 헤더 +\n" + "Bearer <jwt토큰값>")
+                            .description("인증 정보 헤더 +\nBearer <jwt토큰값>")
                     ),
                     pathParameters(
                         parameterWithName("memberId").description("프로필 수정하려는 회원의 ID번호")
@@ -664,10 +665,10 @@ class MemberControllerTest {
     void updatePassword_success() throws Exception {
 
         // given
-        String newPassword = "newPassword123!";
+        String newPassword = "newPassword123@";
 
         String email = "member@email.com";
-        String password = "aaaaaaa!@";
+        String password = "password123@";
         String nickname = "nickname";
         String imageUrl = "image_url";
 
@@ -691,12 +692,38 @@ class MemberControllerTest {
         // then
         Member updatedMember = memberRepository.findById(memberId).get();
         assertThat(passwordEncoder.matches(newPassword, updatedMember.getPassword())).isTrue();
+
         resultActions
             .andDo(print())
             .andExpect(status().isNoContent())
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword"))
-        ;
+            .andDo(
+                document("member-updatePassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor(
+                            (originalContent, contentType) -> "<정상 처리된 경우 응답 본문 없음>".getBytes())
+                    ),
+                    pathParameters(
+                        parameterWithName("memberId").description("비밀번호 수정하려는 회원 ID번호")
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +\nBearer <jwt토큰값>"),
+                        headerWithName(HttpHeaders.CONTENT_TYPE)
+                            .description("요청 메시지의 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
+                        headerWithName(HttpHeaders.ACCEPT)
+                            .description("응답받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON)
+                    ),
+                    requestFields(
+                        fieldWithPath("currentPassword").description("현재 비밀번호 (필수)"),
+                        fieldWithPath("newPassword").description("변경하려는 비밀번호 (필수)"),
+                        fieldWithPath("newPasswordConfirm").description("변경하려는 비밀번호 확인 (필수)")
+                    )
+                )
+            );
     }
 
     @Test
@@ -704,7 +731,7 @@ class MemberControllerTest {
     void updatePassword_error_accessDenied() throws Exception {
 
         // given
-        String member1Password = "member1password@";
+        String member1Password = "password123@";
         String member2Email = "member2@email.com";
 
         long member1Id = createMember("member1@email.com", member1Password, "member1", "image_url");
@@ -728,9 +755,15 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
             .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword-accessDenied"))
-        ;
+            .andDo(
+                document("member-updatePassword-accessDenied",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
     }
 
     @DisplayName("비밀번호 변경 ERROR (값이 누락된 경우)")
@@ -767,9 +800,15 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].field").value(missingTarget))
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").value(errorMessage))
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").isEmpty())
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword-missingValue"))
-        ;
+            .andDo(
+                document("member-updatePassword-missingValue",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
     }
 
 
@@ -801,8 +840,15 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].defaultMessage")
                 .value("비밀번호는 영문자, 숫자, 특수기호($@!%*#?&)가 적어도 1개 이상씩 포함된 길이 8~16인 글자여야 합니다."))
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNewPassword))
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword-wrongNewPassword"))
+            .andDo(
+                document("member-updatePassword-wrongNewPassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
         ;
     }
 
@@ -832,8 +878,15 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("새로운 비밀번호와 비밀번호 확인값이 일치하지 않습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword-notMatchedConfirm"))
+            .andDo(
+                document("member-updatePassword-notMatchedConfirm",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
         ;
     }
 
@@ -863,8 +916,15 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("현재 비밀번호가 일치하지 않습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-        // TODO : 문서화 필요
-        //.andDo(document("member-updatePassword-notMatchedCurrentPassword"))
+            .andDo(
+                document("member-updatePassword-notMatchedCurrentPassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
         ;
     }
 

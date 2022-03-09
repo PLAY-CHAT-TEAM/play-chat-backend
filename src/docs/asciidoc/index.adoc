@@ -4,7 +4,7 @@ kycho;
 :icons: font
 :source-highlighter: highlightjs
 :toc: left
-:toclevels: 4
+:toclevels: 5
 :sectlinks:
 
 [[resources]]
@@ -116,18 +116,70 @@ include::{snippets}/member-updateProfile/response-body.adoc[]
 include::{snippets}/member-updateProfile/curl-request.adoc[]
 include::{snippets}/member-updateProfile/http-response.adoc[]
 
-===== Error (수정 권한 없는 경우)
+===== Error
+====== 1.수정 권한 없는 경우
 include::{snippets}/member-updateProfile-accessDenied/curl-request.adoc[]
 include::{snippets}/member-updateProfile-accessDenied/http-response.adoc[]
 
-===== Error (잘못된 닉네임)
+====== 2.잘못된 닉네임
 include::{snippets}/member-updateProfile-wrongNickname/curl-request.adoc[]
 include::{snippets}/member-updateProfile-wrongNickname/http-response.adoc[]
 
-===== Error (수정 정보 없음)
+====== 3.수정 정보 없음
 include::{snippets}/member-updateProfile-noUpdateData/curl-request.adoc[]
 include::{snippets}/member-updateProfile-noUpdateData/http-response.adoc[]
 
+
+// ------------------------------------------------------------------------------------------------
+[[resources_members_updatePassword]]
+=== Update Password
+비밀번호 변경에 사용될 api
+
+[[resources_members_updatePassword_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-updatePassword/http-request.adoc[]
+
+===== Request Path Parameter
+include::{snippets}/member-updatePassword/path-parameters.adoc[]
+
+===== Request Header
+include::{snippets}/member-updatePassword/request-headers.adoc[]
+
+===== Request Field
+include::{snippets}/member-updatePassword/request-fields.adoc[]
+
+[[resources_members_updateProfile_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-updatePassword/response-body.adoc[]
+
+[[resources_members_updateProfile_sample]]
+==== Sample
+===== Success
+include::{snippets}/member-updatePassword/curl-request.adoc[]
+include::{snippets}/member-updatePassword/http-response.adoc[]
+
+===== Error
+====== 1.수정 권한 없는 경우
+include::{snippets}/member-updatePassword-accessDenied/curl-request.adoc[]
+include::{snippets}/member-updatePassword-accessDenied/http-response.adoc[]
+
+====== 2.누락된 값이 있는 경우
+include::{snippets}/member-updatePassword-missingValue/curl-request.adoc[]
+include::{snippets}/member-updatePassword-missingValue/http-response.adoc[]
+
+====== 3.현재 비밀번호가 다른 경우
+include::{snippets}/member-updatePassword-notMatchedCurrentPassword/curl-request.adoc[]
+include::{snippets}/member-updatePassword-notMatchedCurrentPassword/http-response.adoc[]
+
+====== 4.새 비밀번호가 조건을 만족하지 못하는 경우
+include::{snippets}/member-updatePassword-wrongNewPassword/curl-request.adoc[]
+include::{snippets}/member-updatePassword-wrongNewPassword/http-response.adoc[]
+
+====== 5.비밀번호 확인이 일치하지 않는 경우
+include::{snippets}/member-updatePassword-notMatchedConfirm/curl-request.adoc[]
+include::{snippets}/member-updatePassword-notMatchedConfirm/http-response.adoc[]
 
 // ------------------------------------------------------------------------------------------------
 [[resources_members_me]]
