@@ -546,7 +546,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("회원 프로필 업데이트 ERROR (권한 없는 경우)")
+    @DisplayName("회원 프로필 업데이트 ERROR (수정 권한 없는 경우)")
     void updateProfileTest_accessDenied() throws Exception {
 
         // given
@@ -582,7 +582,13 @@ class MemberControllerTest {
             .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
             .andDo(
-                document("member-updateProfile-accessDenied")
+                document("member-updateProfile-accessDenied",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
             );
     }
 
@@ -613,7 +619,13 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").value("닉네임은 최대 50자까지 가능합니다."))
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
             .andDo(
-                document("member-updateProfile-wrongNicnkane")
+                document("member-updateProfile-wrongNickname",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
             );
     }
 
@@ -631,7 +643,10 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(400))
             .andExpect(jsonPath("message").value("수정할 회원정보가 없습니다."))
             .andDo(
-                document("member-updateProfile-noUpdateData")
+                document("member-updateProfile-noUpdateData",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint())
+                )
             );
     }
 

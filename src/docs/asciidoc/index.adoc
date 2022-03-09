@@ -113,6 +113,19 @@ include::{snippets}/member-updateProfile/response-body.adoc[]
 include::{snippets}/member-updateProfile/curl-request.adoc[]
 include::{snippets}/member-updateProfile/http-response.adoc[]
 
+===== Error (수정 권한 없는 경우)
+include::{snippets}/member-updateProfile-accessDenied/curl-request.adoc[]
+include::{snippets}/member-updateProfile-accessDenied/http-response.adoc[]
+
+===== Error (잘못된 닉네임)
+include::{snippets}/member-updateProfile-wrongNickname/curl-request.adoc[]
+include::{snippets}/member-updateProfile-wrongNickname/http-response.adoc[]
+
+===== Error (수정 정보 없음)
+include::{snippets}/member-updateProfile-noUpdateData/curl-request.adoc[]
+include::{snippets}/member-updateProfile-noUpdateData/http-response.adoc[]
+
+
 // ------------------------------------------------------------------------------------------------
 [[resources_members_me]]
 === Get My Info
