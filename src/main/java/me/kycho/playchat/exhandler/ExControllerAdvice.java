@@ -1,6 +1,7 @@
 package me.kycho.playchat.exhandler;
 
 import java.util.List;
+import javax.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.exception.DuplicatedEmailException;
 import me.kycho.playchat.exception.MemberNotFoundException;
@@ -65,6 +66,14 @@ public class ExControllerAdvice {
     @ExceptionHandler
     public ErrorDto methodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         return new ErrorDto(HttpStatus.BAD_REQUEST.value(), "잘못된 요청입니다.");
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler
+    public ErrorDto constraintViolationException(ConstraintViolationException ex) {
+        String[] split = ex.getMessage().split(":");
+        String errorMessage = split[split.length - 1].trim();
+        return new ErrorDto(HttpStatus.BAD_REQUEST.value(), errorMessage);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

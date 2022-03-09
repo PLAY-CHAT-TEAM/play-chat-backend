@@ -85,6 +85,46 @@ include::{snippets}/member-signUp/curl-request.adoc[]
 ===== Response
 include::{snippets}/member-signUp/http-response.adoc[]
 
+
+// ------------------------------------------------------------------------------------------------
+[[resources_members_checkAvailableEmail]]
+=== Check Available Email
+이메일 사용 가능 여부 조회용 api
+
+[[resources_members_checkAvailableEmail_request]]
+==== Request
+===== Request HTTP Messages
+include::{snippets}/member-checkAvailableEmail/http-request.adoc[]
+===== Request Parameter
+include::{snippets}/member-checkAvailableEmail/request-parameters.adoc[]
+
+[[resources_members_checkAvailableEmail_response]]
+==== Response
+===== Response Body
+include::{snippets}/member-checkAvailableEmail/response-body.adoc[]
+===== Response Field
+include::{snippets}/member-checkAvailableEmail/response-fields.adoc[]
+
+[[resources_members_checkAvailableEmail_sample]]
+==== Sample
+===== Success
+include::{snippets}/member-checkAvailableEmail/curl-request.adoc[]
+include::{snippets}/member-checkAvailableEmail/http-response.adoc[]
+
+===== Error
+====== 1.이메일 파리미터 없는 경우
+include::{snippets}/member-checkAvailableEmail-emptyValue/curl-request.adoc[]
+include::{snippets}/member-checkAvailableEmail-emptyValue/http-response.adoc[]
+
+====== 2.이메일 빈 문자열인 경우
+include::{snippets}/member-checkAvailableEmail-emptyString/curl-request.adoc[]
+include::{snippets}/member-checkAvailableEmail-emptyString/http-response.adoc[]
+
+====== 3.이메일 형식 아닌 경우
+include::{snippets}/member-checkAvailableEmail-notEmailFormat/curl-request.adoc[]
+include::{snippets}/member-checkAvailableEmail-notEmailFormat/http-response.adoc[]
+
+
 // ------------------------------------------------------------------------------------------------
 [[resources_members_updateProfile]]
 === Update Profile

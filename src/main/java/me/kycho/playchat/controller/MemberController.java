@@ -2,8 +2,11 @@ package me.kycho.playchat.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
@@ -22,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,9 +33,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Validated
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
@@ -46,6 +52,16 @@ public class MemberController {
         this.memberService = memberService;
         this.fileStore = fileStore;
         this.backendUrl = backendUrl;
+    }
+
+    @GetMapping("/check-available-email")
+    public ResponseEntity checkAvailableEmail(
+        @Email(message = "이메일 형식이어야 합니다.") @NotEmpty(message = "이메일 파라미터는 필수값입니다.")
+        @RequestParam(value = "email", required = false) String email) {
+
+        boolean available = memberService.checkAvailableEmail(email);
+
+        return ResponseEntity.ok(Map.of("available", available));
     }
 
     @PostMapping("/sign-up")
