@@ -6,17 +6,20 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.headerWit
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,14 +35,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import me.kycho.playchat.common.FileStore;
+import me.kycho.playchat.controller.dto.UpdatePasswordRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
 import me.kycho.playchat.service.MemberService;
+import me.kycho.playchat.utils.FileStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,8 +67,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -88,6 +95,9 @@ class MemberControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @MockBean
     FileStore fileStore;
@@ -229,7 +239,7 @@ class MemberControllerTest {
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
-            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
             .andExpect(jsonPath("fieldErrors[0].field").value("email"))
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongEmail))
@@ -256,7 +266,7 @@ class MemberControllerTest {
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
-            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
             .andExpect(jsonPath("fieldErrors[0].field").value("password"))
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongPassword))
@@ -279,7 +289,7 @@ class MemberControllerTest {
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(400))
-            .andExpect(jsonPath("message").value("Binding Error."))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
             .andExpect(jsonPath("fieldErrors[0].field").value("nickname"))
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").exists())
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
@@ -465,6 +475,460 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("회원 프로필 업데이트 정상")
+    void updateProfileTest() throws Exception {
+
+        // given
+        String email = "member@email.com";
+        String password = "password";
+        String nickname = "nickname";
+        String imageUrl = "http://localhost:8080/images/default-profile.png";
+
+        String updatedNickname = "updated_nickname";
+        String updatedImageUrl = "updated_image_url";
+
+        Member existingMember = Member.builder()
+            .email(email)
+            .password(password)
+            .nickname(nickname)
+            .imageUrl(imageUrl)
+            .build();
+
+        memberRepository.save(existingMember);
+
+        MockMultipartFile updateProfileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+        given(fileStore.storeFile(updateProfileImage)).willReturn(updatedImageUrl);
+
+        // when
+        ResultActions resultActions = mockMvc.perform(
+            multipart("/api/members/{memberId}/update", existingMember.getId())
+                .file(updateProfileImage)
+                .param("nickname", updatedNickname)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                .accept(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        Member updatedMember = memberRepository.findById(existingMember.getId()).get();
+        assertThat(updatedMember.getEmail()).isEqualTo(email);
+        assertThat(updatedMember.getPassword()).isEqualTo(password);
+        assertThat(updatedMember.getNickname()).isEqualTo(updatedNickname);
+        assertThat(updatedMember.getImageUrl()).endsWith(updatedImageUrl);
+
+        resultActions
+            .andExpect(status().isNoContent())
+            .andDo(
+                document("member-updateProfile",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor(
+                            (originalContent, contentType) -> "<정상 처리된 경우 응답 본문 없음>".getBytes())
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.CONTENT_TYPE)
+                            .description("요청 메시지의 콘테츠 타입 +\n" + MediaType.MULTIPART_FORM_DATA),
+                        headerWithName(HttpHeaders.ACCEPT)
+                            .description("응답 받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +\nBearer <jwt토큰값>")
+                    ),
+                    pathParameters(
+                        parameterWithName("memberId").description("프로필 수정하려는 회원의 ID번호")
+                    ),
+                    requestParameters(
+                        parameterWithName("nickname")
+                            .description("회원 프로필 수정에 사용될 닉네임 (선택) +\n "
+                                + "수정이 필요한 경우에만 전송한다.")
+                    ),
+                    requestParts(
+                        partWithName("profileImage")
+                            .description("회원 프로필 수정에 사용될 이미지파일 (선택) +\n"
+                                + "수정이 필요한 경우에만 전송한다. +\n"
+                                + "해당 항목이 포함되어있지만 파일이 비어있는 경우 기본 이미지로 세팅된다.")
+                    )
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("회원 프로필 업데이트 ERROR (수정 권한 없는 경우)")
+    void updateProfileTest_accessDenied() throws Exception {
+
+        // given
+        String member1Email = "member1@email.com";
+
+        Member member1 = Member.builder()
+            .email(member1Email)
+            .password("password")
+            .nickname("member1")
+            .imageUrl("imageUrl")
+            .build();
+
+        Member member2 = Member.builder()
+            .email("member2@email.com")
+            .password("password")
+            .nickname("member2")
+            .imageUrl("imageUrl")
+            .build();
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/" + member2.getId() + "/update")
+                    .param("nickname", "updatedNickname")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member1Email))
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
+            .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            .andDo(
+                document("member-updateProfile-accessDenied",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
+    }
+
+    @DisplayName("회원 프로필 업데이트 ERROR (잘못된 닉네임)")
+    @ParameterizedTest(name = "{index}: 잘못된 닉네임 : {0}")
+    @ValueSource(strings = {"", "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeef"})
+    void updateProfileTest_wrongNickname(String wrongNickname) throws Exception {
+
+        // given
+        MockMultipartFile profileImage = new MockMultipartFile(
+            "profileImage", "imageForTest.png", MediaType.IMAGE_PNG_VALUE,
+            new FileInputStream("./src/test/resources/static/imageForTest.png")
+        );
+        given(fileStore.storeFile(profileImage)).willReturn("storeFileName");
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/1/update")
+                    .file(profileImage)
+                    .param("nickname", wrongNickname)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
+            .andExpect(jsonPath("fieldErrors[0].field").value("nickname"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").value("닉네임은 최대 50자까지 가능합니다."))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNickname))
+            .andDo(
+                document("member-updateProfile-wrongNickname",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("회원 프로필 업데이트 ERROR (업데이트 정보 없음)")
+    void updateProfileTest_noUpdateData() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                multipart("/api/members/1/update")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(400))
+            .andExpect(jsonPath("message").value("수정할 회원정보가 없습니다."))
+            .andDo(
+                document("member-updateProfile-noUpdateData",
+                    preprocessRequest(new AuthHeaderModifyingPreprocessor()),
+                    preprocessResponse(prettyPrint())
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 성공")
+    void updatePassword_success() throws Exception {
+
+        // given
+        String newPassword = "newPassword123@";
+
+        String email = "member@email.com";
+        String password = "password123@";
+        String nickname = "nickname";
+        String imageUrl = "image_url";
+
+        long memberId = createMember(email, password, nickname, imageUrl);
+
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(password)
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPassword)
+            .build();
+
+        // when
+        ResultActions resultActions = mockMvc.perform(
+            put("/api/members/{memberId}/password", memberId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+        );
+
+        // then
+        Member updatedMember = memberRepository.findById(memberId).get();
+        assertThat(passwordEncoder.matches(newPassword, updatedMember.getPassword())).isTrue();
+
+        resultActions
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andDo(
+                document("member-updatePassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor(
+                            (originalContent, contentType) -> "<정상 처리된 경우 응답 본문 없음>".getBytes())
+                    ),
+                    pathParameters(
+                        parameterWithName("memberId").description("비밀번호 수정하려는 회원 ID번호")
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +\nBearer <jwt토큰값>"),
+                        headerWithName(HttpHeaders.CONTENT_TYPE)
+                            .description("요청 메시지의 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
+                        headerWithName(HttpHeaders.ACCEPT)
+                            .description("응답받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON)
+                    ),
+                    requestFields(
+                        fieldWithPath("currentPassword").description("현재 비밀번호 (필수)"),
+                        fieldWithPath("newPassword").description("변경하려는 비밀번호 (필수)"),
+                        fieldWithPath("newPasswordConfirm").description("변경하려는 비밀번호 확인 (필수)")
+                    )
+                )
+            );
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 ERROR (수정 권한 없는 경우)")
+    void updatePassword_error_accessDenied() throws Exception {
+
+        // given
+        String member1Password = "password123@";
+        String member2Email = "member2@email.com";
+
+        long member1Id = createMember("member1@email.com", member1Password, "member1", "image_url");
+        long member2Id = createMember(member2Email, "member2password@", "member2", "image_url");
+
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(member1Password)
+            .newPassword("newPassword123@")
+            .newPasswordConfirm("newPassword123@")
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", member1Id)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member2Email))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
+            .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            .andDo(
+                document("member-updatePassword-accessDenied",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
+    }
+
+    @DisplayName("비밀번호 변경 ERROR (값이 누락된 경우)")
+    @ParameterizedTest(name = "{index}: 누락된 항목 : {0}")
+    @CsvSource({
+        "currentPassword   , 현재 비밀번호는 필수 값입니다.       ,          , newPassword1@, newPassword1@",
+        "newPassword       , 변경할 비밀번호는 필수 값입니다.     , password1@,              , newPassword1@",
+        "newPasswordConfirm, 변경할 비밀번호 확인값은 필수 값입니다., password1@, newPassword1@,              ",
+    })
+    void updatePassword_error_missingValue(
+        String missingTarget, String errorMessage,
+        String currentPassword, String newPassword, String newPasswordConfirm
+    ) throws Exception {
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(currentPassword)
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPasswordConfirm)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(1))
+            .andExpect(jsonPath("fieldErrors[0].field").value(missingTarget))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").value(errorMessage))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").isEmpty())
+            .andDo(
+                document("member-updatePassword-missingValue",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            );
+    }
+
+
+    @DisplayName("비밀번호 변경 ERROR (새로 변경할 비밀번호가 조건을 만족하지 못한 경우)")
+    @ParameterizedTest(name = "{index}: 잘못된 새로운 비밀번호 : {0}")
+    @ValueSource(strings = {"aaaa!@2", "ccc@3cccccccccccc", "bbbbbbbb1", "AAAAAAAAA!", "@11111111"})
+    void updatePassword_error_wrongNewPassword(String wrongNewPassword)
+        throws Exception {
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword(wrongNewPassword)
+            .newPasswordConfirm(wrongNewPassword)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(1))
+            .andExpect(jsonPath("fieldErrors[0].field").value("newPassword"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage")
+                .value("비밀번호는 영문자, 숫자, 특수기호($@!%*#?&)가 적어도 1개 이상씩 포함된 길이 8~16인 글자여야 합니다."))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNewPassword))
+            .andDo(
+                document("member-updatePassword-wrongNewPassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
+        ;
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 ERROR (비밀번호 확인이 일치하지 않는 경우)")
+    void updatePassword_error_notMatchedConfirm() throws Exception {
+
+        String newPassword = "newPassword123!";
+        String newPasswordConfirm = "notMatchedPassword";
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPasswordConfirm)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("새로운 비밀번호와 비밀번호 확인값이 일치하지 않습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            .andDo(
+                document("member-updatePassword-notMatchedConfirm",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
+        ;
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 ERROR (현재 비밀번호가 다른 경우)")
+    void updatePassword_error_notMatchedCurrentPassword() throws Exception {
+
+        String email = "member@naver.com";
+        long memberId = createMember(email, "aaaaaaa1@", "nickname", "image_url");
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword("newPassword123@")
+            .newPasswordConfirm("newPassword123@")
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", memberId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("현재 비밀번호가 일치하지 않습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            .andDo(
+                document("member-updatePassword-notMatchedCurrentPassword",
+                    preprocessRequest(
+                        new AuthHeaderModifyingPreprocessor(),
+                        prettyPrint()
+                    ),
+                    preprocessResponse(prettyPrint())
+                )
+            )
+        ;
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
@@ -534,15 +998,19 @@ class MemberControllerTest {
             .andExpect(status().isNotFound());
     }
 
-    private long createMember(String email, String nickname, String imageUrl) {
+    private long createMember(String email, String password, String nickname, String imageUrl) {
         Member member = Member.builder()
             .email(email)
-            .password("aaaaaaa1!")
+            .password(password)
             .nickname(nickname)
             .imageUrl(imageUrl)
             .build();
         Member signedUpMember = memberService.signUp(member);
         return signedUpMember.getId();
+    }
+
+    private long createMember(String email, String nickname, String imageUrl) {
+        return createMember(email, "aaaaaaa1!", nickname, imageUrl);
     }
 
     private List<Long> createMembers(int memberNum) {

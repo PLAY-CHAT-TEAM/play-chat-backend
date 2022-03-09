@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.exception.DuplicatedEmailException;
 import me.kycho.playchat.exception.MemberNotFoundException;
+import me.kycho.playchat.exception.PasswordNotMatchedException;
 import me.kycho.playchat.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class MemberService {
         validateDuplicateMember(member);
 
         String encodedPassword = passwordEncoder.encode(member.getPassword());
-        member.changePassword(encodedPassword);
+        member.updatePassword(encodedPassword);
 
         return memberRepository.save(member);
     }
@@ -41,6 +42,26 @@ public class MemberService {
 
     public List<Member> getMemberAll() {
         return memberRepository.findAll();
+    }
+
+    @Transactional
+    public void updateProfile(Long targetId, Member updateMemberValue) {
+        Member targetMember = memberRepository.findById(targetId)
+            .orElseThrow(MemberNotFoundException::new);
+
+        targetMember.updateProfile(updateMemberValue);
+    }
+
+    @Transactional
+    public void updatePassword(Long memberId, String currentPassword, String newPassword) {
+        Member targetMember = memberRepository.findById(memberId)
+            .orElseThrow(MemberNotFoundException::new);
+
+        if (!passwordEncoder.matches(currentPassword, targetMember.getPassword())) {
+            throw new PasswordNotMatchedException();
+        }
+
+        targetMember.updatePassword(passwordEncoder.encode(newPassword));
     }
 
     private void validateDuplicateMember(Member member) {

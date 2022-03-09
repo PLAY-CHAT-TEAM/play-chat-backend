@@ -2,3 +2,5 @@ spring:
   profiles:
     include: auth
     active: local
+
+#logging.level.org.apache.coyote.http11: debug

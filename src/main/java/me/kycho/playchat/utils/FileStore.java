@@ -1,4 +1,4 @@
-package me.kycho.playchat.common;
+package me.kycho.playchat.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +29,11 @@ public class FileStore {
         multipartFile.transferTo(new File(getFullPath(storeFileName)));
 
         return storeFileName;
+    }
+
+    public boolean deleteFile(String filename) {
+        File file = new File(fileDir + filename);
+        return file.delete();
     }
 
     public String getFullPath(String filename) {

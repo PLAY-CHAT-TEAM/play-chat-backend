@@ -37,7 +37,16 @@ public class Member {
 
     // TODO : 생성일, 수정일, 삭제일
 
-    public void changePassword(String password) {
+    public void updatePassword(String password) {
         this.password = password;
+    }
+
+    public void updateProfile(Member value) {
+        if (value.getNickname() != null) {
+            this.nickname = value.getNickname();
+        }
+        if (value.getImageUrl() != null) {
+            this.imageUrl = value.getImageUrl();
+        }
     }
 }
