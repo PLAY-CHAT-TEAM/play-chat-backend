@@ -473,10 +473,10 @@ class MemberControllerTest {
         // given
         String email = "member@email.com";
         String password = "password";
-        String nickname = "member";
+        String nickname = "nickname";
         String imageUrl = "http://localhost:8080/images/default-profile.png";
 
-        String updatedNickname = "updated_member";
+        String updatedNickname = "updated_nickname";
         String updatedImageUrl = "updated_image_url";
 
         Member existingMember = Member.builder()
@@ -513,7 +513,35 @@ class MemberControllerTest {
         resultActions
             .andExpect(status().isNoContent())
             .andDo(
-                document("member-updateProfile")
+                document("member-updateProfile",
+                    preprocessRequest(
+                        new PartContentModifyingPreprocessor(),
+                        new AuthHeaderModifyingPreprocessor()
+                    ),
+                    preprocessResponse(
+                        new ContentModifyingOperationPreprocessor(
+                            (originalContent, contentType) -> "<정상 처리된 경우 응답 본문 없음>".getBytes())
+                    ),
+                    requestHeaders(
+                        headerWithName(HttpHeaders.CONTENT_TYPE)
+                            .description("요청 메시지의 콘테츠 타입 +\n" + MediaType.MULTIPART_FORM_DATA),
+                        headerWithName(HttpHeaders.ACCEPT)
+                            .description("응답 받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
+                        headerWithName(HttpHeaders.AUTHORIZATION)
+                            .description("인증 정보 헤더 +\n" + "Bearer <jwt토큰값>")
+                    ),
+                    requestParameters(
+                        parameterWithName("nickname")
+                            .description("회원 프로필 수정에 사용될 닉네임 (선택) +\n "
+                                + "수정이 필요한 경우에만 전송한다.")
+                    ),
+                    requestParts(
+                        partWithName("profileImage")
+                            .description("회원 프로필 수정에 사용될 이미지파일 (선택) +\n"
+                                + "수정이 필요한 경우에만 전송한다. +\n"
+                                + "해당 항목이 포함되어있지만 파일이 비어있는 경우 기본 이미지로 세팅된다.")
+                    )
+                )
             );
     }
 
@@ -543,10 +571,10 @@ class MemberControllerTest {
 
         // when & then
         mockMvc.perform(
-            multipart("/api/members/" + member2.getId() + "/update")
-                .param("nickname", "updatedNickname")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member1Email))
-                .accept(MediaType.APPLICATION_JSON)
+                multipart("/api/members/" + member2.getId() + "/update")
+                    .param("nickname", "updatedNickname")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member1Email))
+                    .accept(MediaType.APPLICATION_JSON)
             )
             .andDo(print())
             .andExpect(status().isForbidden())
