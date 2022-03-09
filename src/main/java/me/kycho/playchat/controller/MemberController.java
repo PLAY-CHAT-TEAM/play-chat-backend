@@ -132,6 +132,11 @@ public class MemberController {
         @AuthenticationPrincipal User currentUser, @PathVariable Long memberId,
         @Valid @RequestBody UpdatePasswordRequestDto dto) {
 
+        Member currentMember = memberService.getMemberByEmail(currentUser.getUsername());
+        if (!currentMember.getId().equals(memberId)) {
+            throw new AccessDeniedException("수정 권한이 없습니다.");
+        }
+
         memberService.updatePassword(memberId, dto.getCurrentPassword(), dto.getNewPassword());
 
         return ResponseEntity.noContent().build();

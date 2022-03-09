@@ -654,6 +654,40 @@ class MemberControllerTest {
             );
     }
 
+    @Test
+    @DisplayName("비밀번호 변경 ERROR (수정 권한 없는 경우)")
+    void updatePassword_error_accessDenied() throws Exception {
+
+        // given
+        String member1Password = "member1password@";
+        String member2Email = "member2@email.com";
+
+        long member1Id = createMember("member1@email.com", member1Password, "member1", "image_url");
+        long member2Id = createMember(member2Email, "member2password@", "member2", "image_url");
+
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(member1Password)
+            .newPassword("newPassword123@")
+            .newPasswordConfirm("newPassword123@")
+            .build();
+
+        // when & then
+        mockMvc.perform(
+            put("/api/members/{memberId}/password", member1Id)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member2Email))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+        )
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
+            .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            // TODO : 문서화 필요
+            //.andDo(document("member-updatePassword-accessDenied"))
+        ;
+    }
+
     @DisplayName("비밀번호 변경 ERROR (값이 누락된 경우)")
     @ParameterizedTest(name = "{index}: 누락된 항목 : {0}")
     @CsvSource({
