@@ -759,6 +759,37 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("비밀번호 변경 ERROR (현재 비밀번호가 다른 경우)")
+    void updatePassword_error_notMatchedCurrentPassword() throws Exception {
+
+        String email = "member@naver.com";
+        long memberId = createMember(email, "aaaaaaa1@", "nickname", "image_url");
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword("newPassword123@")
+            .newPasswordConfirm("newPassword123@")
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", memberId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("현재 비밀번호가 일치하지 않습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            // TODO : 문서화 필요
+            //.andDo(document("member-updatePassword-notMatchedCurrentPassword"))
+        ;
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
@@ -828,15 +859,19 @@ class MemberControllerTest {
             .andExpect(status().isNotFound());
     }
 
-    private long createMember(String email, String nickname, String imageUrl) {
+    private long createMember(String email, String password, String nickname, String imageUrl) {
         Member member = Member.builder()
             .email(email)
-            .password("aaaaaaa1!")
+            .password(password)
             .nickname(nickname)
             .imageUrl(imageUrl)
             .build();
         Member signedUpMember = memberService.signUp(member);
         return signedUpMember.getId();
+    }
+
+    private long createMember(String email, String nickname, String imageUrl) {
+        return createMember(email, "aaaaaaa1!", nickname, imageUrl);
     }
 
     private List<Long> createMembers(int memberNum) {

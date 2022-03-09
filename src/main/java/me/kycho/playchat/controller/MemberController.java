@@ -130,7 +130,9 @@ public class MemberController {
     @PutMapping("/{memberId}/password")
     public ResponseEntity updatePassword(
         @AuthenticationPrincipal User currentUser, @PathVariable Long memberId,
-        @Valid @RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
+        @Valid @RequestBody UpdatePasswordRequestDto dto) {
+
+        memberService.updatePassword(memberId, dto.getCurrentPassword(), dto.getNewPassword());
 
         return ResponseEntity.noContent().build();
     }

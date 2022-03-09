@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.exception.DuplicatedEmailException;
 import me.kycho.playchat.exception.MemberNotFoundException;
+import me.kycho.playchat.exception.PasswordNotMatchedException;
 import me.kycho.playchat.exhandler.dto.ErrorDto;
 import me.kycho.playchat.validator.UpdatePasswordRequestValidator;
 import me.kycho.playchat.validator.UpdateProfileRequestValidator;
@@ -52,6 +53,12 @@ public class ExControllerAdvice {
     @ExceptionHandler
     public ErrorDto memberNotFoundException(MemberNotFoundException ex) {
         return new ErrorDto(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler
+    public ErrorDto passwordNotMatchedException(PasswordNotMatchedException ex) {
+        return new ErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
