@@ -20,6 +20,11 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public boolean checkAvailableEmail(String email) {
+        Optional<Member> optionalMember = memberRepository.findByEmail(email);
+        return optionalMember.isEmpty();
+    }
+
     @Transactional
     public Member signUp(Member member) {
         validateDuplicateMember(member);

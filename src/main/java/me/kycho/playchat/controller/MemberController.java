@@ -2,6 +2,7 @@ package me.kycho.playchat.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
@@ -58,7 +59,9 @@ public class MemberController {
         @Email(message = "이메일 형식이어야 합니다.") @NotEmpty(message = "이메일 파라미터는 필수값입니다.")
         @RequestParam(value = "email", required = false) String email) {
 
-        return ResponseEntity.ok().build();
+        boolean available = memberService.checkAvailableEmail(email);
+
+        return ResponseEntity.ok(Map.of("available", available));
     }
 
     @PostMapping("/sign-up")

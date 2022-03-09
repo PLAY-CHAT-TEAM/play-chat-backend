@@ -109,6 +109,40 @@ class MemberControllerTest {
     String uploadFileDir;
 
     @Test
+    @DisplayName("이메일 사용가능 여부 조회 사용가능")
+    void checkAvailableEmail_success_available() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/check-available-email")
+                    .param("email", "member@email.com")
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("available").value(true))
+        ;
+    }
+
+    @Test
+    @DisplayName("이메일 사용가능 여부 조회 사용불가능")
+    void checkAvailableEmail_success_notAvailable() throws Exception {
+
+        // given
+        String email = "member@email.com";
+        createMember(email, "member", "iamge_url");
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/check-available-email")
+                    .param("email", email)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("available").value(false))
+        ;
+    }
+
+    @Test
     @DisplayName("이메일 사용가능 여부 조회 ERROR(이메일 값 없음)")
     void checkAvailableEmail_error_emptyValue() throws Exception {
 
