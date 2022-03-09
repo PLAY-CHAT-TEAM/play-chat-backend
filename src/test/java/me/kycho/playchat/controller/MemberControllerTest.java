@@ -109,6 +109,53 @@ class MemberControllerTest {
     String uploadFileDir;
 
     @Test
+    @DisplayName("이메일 사용가능 여부 조회 ERROR(이메일 값 없음)")
+    void checkAvailableEmail_error_emptyValue() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/check-available-email")
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("이메일 파라미터는 필수값입니다."))
+        ;
+    }
+
+    @Test
+    @DisplayName("이메일 사용가능 여부 조회 ERROR(이메일 값 빈문자열)")
+    void checkAvailableEmail_error_emptyString() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/check-available-email")
+                    .param("email", "")
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("이메일 파라미터는 필수값입니다."))
+        ;
+    }
+
+    @Test
+    @DisplayName("이메일 사용가능 여부 조회 ERROR(이메일 형식이 아닌 문자열)")
+    void checkAvailableEmail_error_notEmailString() throws Exception {
+
+        // when & then
+        mockMvc.perform(
+                get("/api/members/check-available-email")
+                    .param("email", "noEmailFormat")
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("이메일 형식이어야 합니다."))
+        ;
+    }
+
+    @Test
     @DisplayName("회원가입 테스트 정상")
     void signUpTest() throws Exception {
 
