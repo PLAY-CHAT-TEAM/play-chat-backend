@@ -7,6 +7,7 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.requestHe
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -17,7 +18,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.partWith
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import me.kycho.playchat.controller.dto.UpdatePasswordRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.repository.MemberRepository;
 import me.kycho.playchat.security.jwt.JwtTokenProvider;
@@ -41,6 +42,7 @@ import me.kycho.playchat.utils.FileStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -579,7 +581,6 @@ class MemberControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member1Email))
                     .accept(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
             .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
@@ -651,6 +652,45 @@ class MemberControllerTest {
                     preprocessResponse(prettyPrint())
                 )
             );
+    }
+
+    @DisplayName("비밀번호 변경 ERROR 값이 누락된 경우")
+    @ParameterizedTest(name = "{index}: 누락된 항목 : {0}")
+    @CsvSource({
+        "currentPassword   , 현재 비밀번호는 필수 값입니다.       ,          , newPassword1@, newPassword1@",
+        "newPassword       , 변경할 비밀번호는 필수 값입니다.     , password1@,              , newPassword1@",
+        "newPasswordConfirm, 변경할 비밀번호 확인값은 필수 값입니다., password1@, newPassword1@,              ",
+    })
+    void updatePassword_error_missingValue(
+        String missingTarget, String errorMessage,
+        String currentPassword, String newPassword, String newPasswordConfirm
+    ) throws Exception {
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(currentPassword)
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPasswordConfirm)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(1))
+            .andExpect(jsonPath("fieldErrors[0].field").value(missingTarget))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage").value(errorMessage))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").isEmpty())
+            // TODO : 문서화 필요
+            //.andDo(document("member-updatePassword-missingValue"))
+        ;
     }
 
     @Test

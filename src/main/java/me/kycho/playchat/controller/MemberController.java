@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import me.kycho.playchat.controller.dto.MemberResponseDto;
 import me.kycho.playchat.controller.dto.SignUpRequestDto;
 import me.kycho.playchat.controller.dto.SignUpResponseDto;
+import me.kycho.playchat.controller.dto.UpdatePasswordRequestDto;
 import me.kycho.playchat.controller.dto.UpdateProfileRequestDto;
 import me.kycho.playchat.domain.Member;
 import me.kycho.playchat.service.MemberService;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -121,6 +124,14 @@ public class MemberController {
         }
 
         memberService.updateProfile(memberId, updateProfileRequestDto.toMemberEntity());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{memberId}/password")
+    public ResponseEntity updatePassword(
+        @AuthenticationPrincipal User currentUser, @PathVariable Long memberId,
+        @Valid @RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
+
         return ResponseEntity.noContent().build();
     }
 
