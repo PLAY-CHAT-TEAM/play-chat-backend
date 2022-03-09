@@ -25,7 +25,7 @@ public class MemberService {
         validateDuplicateMember(member);
 
         String encodedPassword = passwordEncoder.encode(member.getPassword());
-        member.changePassword(encodedPassword);
+        member.updatePassword(encodedPassword);
 
         return memberRepository.save(member);
     }
@@ -59,6 +59,8 @@ public class MemberService {
         if (!passwordEncoder.matches(currentPassword, targetMember.getPassword())) {
             throw new PasswordNotMatchedException();
         }
+
+        targetMember.updatePassword(passwordEncoder.encode(newPassword));
     }
 
     private void validateDuplicateMember(Member member) {

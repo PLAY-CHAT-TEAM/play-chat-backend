@@ -18,6 +18,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.partWith
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -65,6 +66,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -92,6 +94,9 @@ class MemberControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @MockBean
     FileStore fileStore;
@@ -655,6 +660,46 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("비밀번호 변경 성공")
+    void updatePassword_success() throws Exception {
+
+        // given
+        String newPassword = "newPassword123!";
+
+        String email = "member@email.com";
+        String password = "aaaaaaa!@";
+        String nickname = "nickname";
+        String imageUrl = "image_url";
+
+        long memberId = createMember(email, password, nickname, imageUrl);
+
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword(password)
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPassword)
+            .build();
+
+        // when
+        ResultActions resultActions = mockMvc.perform(
+            put("/api/members/{memberId}/password", memberId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+        );
+
+        // then
+        Member updatedMember = memberRepository.findById(memberId).get();
+        assertThat(passwordEncoder.matches(newPassword, updatedMember.getPassword())).isTrue();
+        resultActions
+            .andDo(print())
+            .andExpect(status().isNoContent())
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword"))
+        ;
+    }
+
+    @Test
     @DisplayName("비밀번호 변경 ERROR (수정 권한 없는 경우)")
     void updatePassword_error_accessDenied() throws Exception {
 
@@ -673,18 +718,18 @@ class MemberControllerTest {
 
         // when & then
         mockMvc.perform(
-            put("/api/members/{memberId}/password", member1Id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member2Email))
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
-        )
+                put("/api/members/{memberId}/password", member1Id)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(member2Email))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("status").value(HttpStatus.FORBIDDEN.value()))
             .andExpect(jsonPath("message").value("수정 권한이 없습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-            // TODO : 문서화 필요
-            //.andDo(document("member-updatePassword-accessDenied"))
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword-accessDenied"))
         ;
     }
 
@@ -722,8 +767,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].field").value(missingTarget))
             .andExpect(jsonPath("fieldErrors[0].defaultMessage").value(errorMessage))
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").isEmpty())
-            // TODO : 문서화 필요
-            //.andDo(document("member-updatePassword-missingValue"))
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword-missingValue"))
         ;
     }
 
@@ -756,8 +801,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].defaultMessage")
                 .value("비밀번호는 영문자, 숫자, 특수기호($@!%*#?&)가 적어도 1개 이상씩 포함된 길이 8~16인 글자여야 합니다."))
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNewPassword))
-            // TODO : 문서화 필요
-            //.andDo(document("member-updatePassword-wrongNewPassword"))
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword-wrongNewPassword"))
         ;
     }
 
@@ -787,8 +832,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("새로운 비밀번호와 비밀번호 확인값이 일치하지 않습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-            // TODO : 문서화 필요
-            //.andDo(document("member-updatePassword-notMatchedConfirm"))
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword-notMatchedConfirm"))
         ;
     }
 
@@ -818,8 +863,8 @@ class MemberControllerTest {
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("현재 비밀번호가 일치하지 않습니다."))
             .andExpect(jsonPath("fieldErrors.length()").value(0))
-            // TODO : 문서화 필요
-            //.andDo(document("member-updatePassword-notMatchedCurrentPassword"))
+        // TODO : 문서화 필요
+        //.andDo(document("member-updatePassword-notMatchedCurrentPassword"))
         ;
     }
 
