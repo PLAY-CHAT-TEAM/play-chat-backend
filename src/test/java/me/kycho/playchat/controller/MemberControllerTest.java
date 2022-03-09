@@ -19,7 +19,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.partWith
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -117,10 +116,19 @@ class MemberControllerTest {
                 get("/api/members/check-available-email")
                     .param("email", "member@email.com")
             )
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("available").value(true))
-        ;
+            .andDo(
+                document("member-checkAvailableEmail",
+                    preprocessResponse(prettyPrint()),
+                    requestParameters(
+                        parameterWithName("email").description("사용 가능 여부를 확인하기 위한 이메일 (필수)")
+                    ),
+                    responseFields(
+                        fieldWithPath("available").description("사용 가능 여부")
+                    )
+                )
+            );
     }
 
     @Test
@@ -136,10 +144,8 @@ class MemberControllerTest {
                 get("/api/members/check-available-email")
                     .param("email", email)
             )
-            .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("available").value(false))
-        ;
+            .andExpect(jsonPath("available").value(false));
     }
 
     @Test
@@ -150,11 +156,14 @@ class MemberControllerTest {
         mockMvc.perform(
                 get("/api/members/check-available-email")
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("이메일 파라미터는 필수값입니다."))
-        ;
+            .andDo(
+                document("member-checkAvailableEmail-emptyValue",
+                    preprocessResponse(prettyPrint())
+                )
+            );
     }
 
     @Test
@@ -166,27 +175,33 @@ class MemberControllerTest {
                 get("/api/members/check-available-email")
                     .param("email", "")
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("이메일 파라미터는 필수값입니다."))
-        ;
+            .andDo(
+                document("member-checkAvailableEmail-emptyString",
+                    preprocessResponse(prettyPrint())
+                )
+            );
     }
 
     @Test
     @DisplayName("이메일 사용가능 여부 조회 ERROR(이메일 형식이 아닌 문자열)")
-    void checkAvailableEmail_error_notEmailString() throws Exception {
+    void checkAvailableEmail_error_notEmailFormat() throws Exception {
 
         // when & then
         mockMvc.perform(
                 get("/api/members/check-available-email")
                     .param("email", "noEmailFormat")
             )
-            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
             .andExpect(jsonPath("message").value("이메일 형식이어야 합니다."))
-        ;
+            .andDo(
+                document("member-checkAvailableEmail-notEmailFormat",
+                    preprocessResponse(prettyPrint())
+                )
+            );
     }
 
     @Test
@@ -775,7 +790,6 @@ class MemberControllerTest {
         assertThat(passwordEncoder.matches(newPassword, updatedMember.getPassword())).isTrue();
 
         resultActions
-            .andDo(print())
             .andExpect(status().isNoContent())
             .andDo(
                 document("member-updatePassword",
