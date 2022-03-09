@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.kycho.playchat.exception.DuplicatedEmailException;
 import me.kycho.playchat.exception.MemberNotFoundException;
 import me.kycho.playchat.exhandler.dto.ErrorDto;
+import me.kycho.playchat.validator.UpdatePasswordRequestValidator;
 import me.kycho.playchat.validator.UpdateProfileRequestValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,10 +24,16 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class ExControllerAdvice {
 
     private final UpdateProfileRequestValidator updateProfileRequestValidator;
+    private final UpdatePasswordRequestValidator updatePasswordRequestValidator;
 
     @InitBinder("updateProfileRequestDto")
-    public void init(WebDataBinder webDataBinder) {
+    public void addUpdateProfileRequestValidator(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(updateProfileRequestValidator);
+    }
+
+    @InitBinder("updatePasswordRequestDto")
+    public void addUpdatePasswordRequestValidator(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(updatePasswordRequestValidator);
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)

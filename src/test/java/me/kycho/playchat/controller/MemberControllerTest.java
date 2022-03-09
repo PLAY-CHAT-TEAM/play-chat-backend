@@ -728,6 +728,37 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("비밀번호 변경 ERROR (비밀번호 확인이 일치하지 않는 경우)")
+    void updatePassword_error_notMatchedConfirm() throws Exception {
+
+        String newPassword = "newPassword123!";
+        String newPasswordConfirm = "notMatchedPassword";
+
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword(newPassword)
+            .newPasswordConfirm(newPasswordConfirm)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("새로운 비밀번호와 비밀번호 확인값이 일치하지 않습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(0))
+            // TODO : 문서화 필요
+            //.andDo(document("member-updatePassword-notMatchedConfirm"))
+        ;
+    }
+
+    @Test
     @DisplayName("프로필 이미지 조회 정상")
     void downloadImageTest() throws Exception {
 
