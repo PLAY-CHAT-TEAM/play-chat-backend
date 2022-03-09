@@ -6,6 +6,7 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.headerWit
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -16,7 +17,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.partWith
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -496,7 +496,7 @@ class MemberControllerTest {
 
         // when
         ResultActions resultActions = mockMvc.perform(
-            multipart("/api/members/" + existingMember.getId() + "/update")
+            multipart("/api/members/{memberId}/update", existingMember.getId())
                 .file(updateProfileImage)
                 .param("nickname", updatedNickname)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken(email))
@@ -529,6 +529,9 @@ class MemberControllerTest {
                             .description("응답 받을 콘텐츠 타입 +\n" + MediaType.APPLICATION_JSON),
                         headerWithName(HttpHeaders.AUTHORIZATION)
                             .description("인증 정보 헤더 +\n" + "Bearer <jwt토큰값>")
+                    ),
+                    pathParameters(
+                        parameterWithName("memberId").description("프로필 수정하려는 회원의 ID번호")
                     ),
                     requestParameters(
                         parameterWithName("nickname")
