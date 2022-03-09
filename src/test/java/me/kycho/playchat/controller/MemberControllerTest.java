@@ -654,7 +654,7 @@ class MemberControllerTest {
             );
     }
 
-    @DisplayName("비밀번호 변경 ERROR 값이 누락된 경우")
+    @DisplayName("비밀번호 변경 ERROR (값이 누락된 경우)")
     @ParameterizedTest(name = "{index}: 누락된 항목 : {0}")
     @CsvSource({
         "currentPassword   , 현재 비밀번호는 필수 값입니다.       ,          , newPassword1@, newPassword1@",
@@ -690,6 +690,40 @@ class MemberControllerTest {
             .andExpect(jsonPath("fieldErrors[0].rejectedValue").isEmpty())
             // TODO : 문서화 필요
             //.andDo(document("member-updatePassword-missingValue"))
+        ;
+    }
+
+
+    @DisplayName("비밀번호 변경 ERROR (새로 변경할 비밀번호가 조건을 만족하지 못한 경우)")
+    @ParameterizedTest(name = "{index}: 잘못된 새로운 비밀번호 : {0}")
+    @ValueSource(strings = {"aaaa!@2", "ccc@3cccccccccccc", "bbbbbbbb1", "AAAAAAAAA!", "@11111111"})
+    void updatePassword_error_wrongNewPassword(String wrongNewPassword)
+        throws Exception {
+        // given
+        UpdatePasswordRequestDto updatePasswordRequestDto = UpdatePasswordRequestDto.builder()
+            .currentPassword("password123!")
+            .newPassword(wrongNewPassword)
+            .newPasswordConfirm(wrongNewPassword)
+            .build();
+
+        // when & then
+        mockMvc.perform(
+                put("/api/members/{memberId}/password", 1)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updatePasswordRequestDto))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("status").value(HttpStatus.BAD_REQUEST.value()))
+            .andExpect(jsonPath("message").value("입력 값이 잘못되었습니다."))
+            .andExpect(jsonPath("fieldErrors.length()").value(1))
+            .andExpect(jsonPath("fieldErrors[0].field").value("newPassword"))
+            .andExpect(jsonPath("fieldErrors[0].defaultMessage")
+                .value("비밀번호는 영문자, 숫자, 특수기호($@!%*#?&)가 적어도 1개 이상씩 포함된 길이 8~16인 글자여야 합니다."))
+            .andExpect(jsonPath("fieldErrors[0].rejectedValue").value(wrongNewPassword))
+            // TODO : 문서화 필요
+            //.andDo(document("member-updatePassword-wrongNewPassword"))
         ;
     }
 
