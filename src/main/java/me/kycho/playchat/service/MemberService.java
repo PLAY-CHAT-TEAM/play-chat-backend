@@ -52,6 +52,7 @@ public class MemberService {
         targetMember.updateProfile(updateMemberValue);
     }
 
+    @Transactional
     public void updatePassword(Long memberId, String currentPassword, String newPassword) {
         Member targetMember = memberRepository.findById(memberId)
             .orElseThrow(MemberNotFoundException::new);
